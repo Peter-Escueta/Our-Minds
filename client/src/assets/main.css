@@ -126,3 +126,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .text-primary {
+    color: var(--color-primary);
+  }
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+}

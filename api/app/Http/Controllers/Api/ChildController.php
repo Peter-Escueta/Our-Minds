@@ -8,11 +8,12 @@ use Illuminate\Http\Request;
 
 class ChildController extends Controller
 {
-    public function index()
-    {
-        $children = Child::orderBy('surname')->get();
-        return response()->json($children);
-    }
+public function index()
+{
+    $children = Child::withCount('assessments')->orderBy('surname')->get();
+    return response()->json($children);
+}
+
 
     public function store(Request $request)
     {

@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import axios from 'axios'
+import { toast } from 'vue-sonner'
+import { useRouter } from 'vue-router'
 import {
   Select,
   SelectContent,
@@ -11,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -19,137 +23,201 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Plus, Trash2, Pencil } from 'lucide-vue-next'
+import { Plus, Trash2, Pencil, Loader2 } from 'lucide-vue-next'
+import ConsultantHeader from '@/components/ConsultantHeader.vue'
 
-type Question = {
-  id: string
+const router = useRouter()
+
+interface Question {
+  id: number
   text: string
   age: number
-}
-
-type SkillCategory = {
-  id: string
-  name: string
-  color?: string
-  questions: Question[]
-}
-
-const categories: SkillCategory[] = [
-  {
-    id: 'psychosocial',
-    name: 'Psychosocial Skills',
-    color: 'bg-red-700',
-    questions: []
-  },
-  {
-    id: 'language',
-    name: 'Language Skills',
-    color: 'bg-blue-700',
-    questions: []
-  },
-  {
-    id: 'fine-motor',
-    name: 'Fine Motor Skills',
-    color: 'bg-green-700',
-    questions: []
-  },
-  {
-    id: 'cognitive',
-    name: 'Cognitive Skills',
-    color: 'bg-yellow-700',
-    questions: []
-  },
-  {
-    id: 'gross-motor',
-    name: 'Gross Motor Skills',
-    color: 'bg-purple-700',
-    questions: []
+  skill_category_id: number
+  category?: {
+    id: number
+    name: string
+    slug: string
+    color: string
   }
-]
+}
 
-const availableAges = Array.from({ length: 12 }, (_, i) => i + 1) // Ages 1-12
+interface SkillCategory {
+  id: number
+  name: string
+  slug: string
+  color: string
+  questions_count: number
+}
 
-const selectedCategory = ref('psychosocial')
-const selectedAge = ref(1)
+// Reactive state
+const categories = ref<SkillCategory[]>([])
+const questions = ref<Question[]>([])
+const availableAges = Array.from({ length: 12 }, (_, i) => i + 1)
+const selectedCategory = ref<number | null>(null)
+const selectedAge = ref<number>(1)
 const newQuestionText = ref('')
-const editingQuestionId = ref<string | null>(null)
+const editingQuestionId = ref<number | null>(null)
+const isLoading = ref(false)
+const isCategoriesLoading = ref(false)
 
-// Initialize with some sample questions (in a real app, you'd load from an API)
-onMounted(() => {
-  categories.forEach(category => {
-    category.questions = [
-      { id: `${category.id}-sample-1`, text: `Sample question for age 3`, age: 3 },
-      { id: `${category.id}-sample-2`, text: `Sample question for age 5`, age: 5 }
-    ]
-  })
+// Configure axios instance with auth
+const api = axios.create({
+  baseURL: 'http://localhost:8000/api',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  }
 })
 
-const getQuestionsForCategoryAndAge = (categoryId: string, age: number) => {
-  const category = categories.find(c => c.id === categoryId)
-  return category?.questions.filter(q => q.age === age) || []
+// Add auth interceptor
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  } else {
+    router.push('/')
+    throw new Error('No authentication token found')
+  }
+  return config
+})
+
+// Error handler
+const handleApiError = (error: any, defaultMessage: string) => {
+  console.error('API Error:', error)
+  
+  if (error.response?.status === 401) {
+    toast.error('Session expired. Please login again.')
+    router.push('/')
+  } else {
+    const message = error.response?.data?.message || defaultMessage
+    toast.error(message)
+  }
 }
 
-const addQuestion = () => {
-  if (!newQuestionText.value.trim()) return
+// Safe find category helper
+const findCategory = (id: number | null) => {
+  return categories.value.find(c => c.id === id) ?? null
+}
 
-  const category = categories.find(c => c.id === selectedCategory.value)
-  if (!category) return
-
-  if (editingQuestionId.value) {
-    // Edit existing question
-    const question = category.questions.find(q => q.id === editingQuestionId.value)
-    if (question) {
-      question.text = newQuestionText.value
-      question.age = selectedAge.value
+// Fetch all skill categories
+const fetchCategories = async () => {
+  try {
+    isCategoriesLoading.value = true
+    const response = await api.get('/skill-categories')
+    
+    if (!Array.isArray(response.data.data)) {
+      throw new Error('Invalid categories data format')
     }
-    editingQuestionId.value = null
-  } else {
-    // Add new question
-    const newId = `${selectedCategory.value}-${Date.now()}`
-    category.questions.push({
-      id: newId,
-      text: newQuestionText.value,
-      age: selectedAge.value
+    
+    categories.value = response.data.data
+    
+    if (categories.value.length > 0 && !selectedCategory.value) {
+      selectedCategory.value = categories.value[0].id
+    }
+  } catch (error) {
+    handleApiError(error, 'Failed to fetch categories')
+    categories.value = []
+  } finally {
+    isCategoriesLoading.value = false
+  }
+}
+
+const fetchQuestions = async () => {
+  if (!selectedCategory.value) return
+  
+  try {
+    isLoading.value = true
+    const response = await api.get('/questions', {
+      params: { category_id: selectedCategory.value }
     })
+    
+    questions.value = response.data
+  } catch (error) {
+    handleApiError(error, 'Failed to fetch questions')
+    questions.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Get questions filtered by age
+const getQuestionsForAge = (age: number) => {
+  return questions.value.filter(q => q.age === age)
+}
+
+// Save or update question
+const saveQuestion = async () => {
+  if (!newQuestionText.value.trim() || !selectedCategory.value) {
+    toast.warning('Please enter question text and select a category')
+    return
   }
 
-  newQuestionText.value = ''
+  try {
+    if (editingQuestionId.value) {
+      await api.put(`/questions/${editingQuestionId.value}`, {
+        text: newQuestionText.value,
+        age: selectedAge.value
+      })
+      toast.success('Question updated successfully')
+    } else {
+      await api.post('/questions', {
+        skill_category_id: selectedCategory.value,
+        text: newQuestionText.value,
+        age: selectedAge.value
+      })
+      toast.success('Question added successfully')
+    }
+    
+    newQuestionText.value = ''
+    editingQuestionId.value = null
+    await fetchQuestions()
+  } catch (error) {
+    handleApiError(error, 'Failed to save question')
+  }
 }
 
+// Set up question for editing
 const editQuestion = (question: Question) => {
   editingQuestionId.value = question.id
   newQuestionText.value = question.text
   selectedAge.value = question.age
 }
 
-const deleteQuestion = (categoryId: string, questionId: string) => {
-  const category = categories.find(c => c.id === categoryId)
-  if (category) {
-    category.questions = category.questions.filter(q => q.id !== questionId)
+// Delete a question
+const deleteQuestion = async (questionId: number) => {
+  try {
+    await api.delete(`/questions/${questionId}`)
+    toast.success('Question deleted successfully')
+    await fetchQuestions()
+  } catch (error) {
+    handleApiError(error, 'Failed to delete question')
   }
 }
 
+// Cancel editing mode
 const cancelEdit = () => {
   editingQuestionId.value = null
   newQuestionText.value = ''
 }
+
+// Initialize component
+onMounted(async () => {
+  try {
+    await fetchCategories()
+    await fetchQuestions()
+  } catch (error) {
+    handleApiError(error, 'Failed to initialize component')
+  }
+})
+
+// Watch for category changes
+watch(selectedCategory, fetchQuestions)
 </script>
 
 <template>
   <div class="min-h-screen">
-    <!-- Header (same as assessment form) -->
-    <header class="bg-white shadow-sm sticky top-0 z-10">
-      <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-        <div class="flex items-center space-x-2">
-          <div class="text-2xl font-bold text-primary">UNAWA</div>
-          <div class="text-sm text-secondary">Question Management</div>
-        </div>
-        
-        <!-- User dropdown would go here -->
-      </div>
-    </header>
+    <ConsultantHeader />
 
-    <!-- Main Content -->
     <main class="container mx-auto font-display py-8">
       <h1 class="text-center text-2xl text-primary font-bold mb-8">Manage Assessment Questions</h1>
 
@@ -161,7 +229,11 @@ const cancelEdit = () => {
               <CardTitle>Categories</CardTitle>
             </CardHeader>
             <CardContent>
-              <div class="space-y-2">
+              <div v-if="isCategoriesLoading" class="flex justify-center py-4">
+                <Loader2 class="h-6 w-6 animate-spin" />
+                <span class="ml-2">Loading...</span>
+              </div>
+              <div v-else class="space-y-2">
                 <Button
                   v-for="category in categories"
                   :key="category.id"
@@ -170,8 +242,12 @@ const cancelEdit = () => {
                   :class="{ 'bg-accent': selectedCategory === category.id }"
                   @click="selectedCategory = category.id"
                 >
-                  {{ category.name }}
+                  <span class="truncate">{{ category.name }}</span>
+                  <Badge class="ml-2">{{ category.questions_count }}</Badge>
                 </Button>
+                <div v-if="categories.length === 0" class="text-center text-gray-500 py-2">
+                  No categories available
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -196,7 +272,11 @@ const cancelEdit = () => {
                         <SelectValue placeholder="Select age group" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem v-for="age in availableAges" :key="age" :value="age">
+                        <SelectItem 
+                          v-for="age in availableAges" 
+                          :key="age" 
+                          :value="age"
+                        >
                           Age {{ age }}
                         </SelectItem>
                       </SelectContent>
@@ -204,10 +284,24 @@ const cancelEdit = () => {
                   </div>
                   <div>
                     <Label for="category">Skill Category</Label>
-                    <Select v-model="selectedCategory" disabled>
+                    <Select 
+                      v-model="selectedCategory" 
+                      :disabled="isCategoriesLoading || categories.length === 0"
+                    >
                       <SelectTrigger>
-                        <SelectValue :placeholder="categories.find(c => c.id === selectedCategory)?.name" />
+                        <SelectValue>
+                          {{ findCategory(selectedCategory)?.name || 'Select category' }}
+                        </SelectValue>
                       </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem 
+                          v-for="category in categories" 
+                          :key="category.id" 
+                          :value="category.id"
+                        >
+                          {{ category.name }}
+                        </SelectItem>
+                      </SelectContent>
                     </Select>
                   </div>
                 </div>
@@ -218,6 +312,7 @@ const cancelEdit = () => {
                     id="question"
                     v-model="newQuestionText"
                     placeholder="Enter the assessment question"
+                    @keyup.enter="saveQuestion"
                   />
                 </div>
 
@@ -230,8 +325,8 @@ const cancelEdit = () => {
                     Cancel
                   </Button>
                   <Button
-                    @click="addQuestion"
-                    :disabled="!newQuestionText.trim()"
+                    @click="saveQuestion"
+                    :disabled="!newQuestionText.trim() || !selectedCategory"
                   >
                     <Plus class="mr-2 h-4 w-4" />
                     {{ editingQuestionId ? 'Update Question' : 'Add Question' }}
@@ -244,12 +339,19 @@ const cancelEdit = () => {
           <!-- Questions List -->
           <Card>
             <CardHeader>
-              <CardTitle>Questions for {{ categories.find(c => c.id === selectedCategory)?.name }}</CardTitle>
+              <CardTitle>
+                Questions for {{ findCategory(selectedCategory)?.name || 'Selected Category' }}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div class="space-y-6">
+              <div v-if="isLoading" class="flex justify-center py-8">
+                <Loader2 class="h-8 w-8 animate-spin" />
+                <span class="ml-2">Loading questions...</span>
+              </div>
+
+              <div v-else class="space-y-6">
                 <div v-for="age in availableAges" :key="age">
-                  <div v-if="getQuestionsForCategoryAndAge(selectedCategory, age).length > 0" class="space-y-2">
+                  <div v-if="getQuestionsForAge(age).length > 0" class="space-y-2">
                     <h3 class="text-lg font-semibold">Age {{ age }}</h3>
                     <Table>
                       <TableHeader>
@@ -260,7 +362,10 @@ const cancelEdit = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        <TableRow v-for="(question, index) in getQuestionsForCategoryAndAge(selectedCategory, age)" :key="question.id">
+                        <TableRow 
+                          v-for="(question, index) in getQuestionsForAge(age)" 
+                          :key="question.id"
+                        >
                           <TableCell>{{ index + 1 }}</TableCell>
                           <TableCell>{{ question.text }}</TableCell>
                           <TableCell>
@@ -275,7 +380,7 @@ const cancelEdit = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                @click="deleteQuestion(selectedCategory, question.id)"
+                                @click="deleteQuestion(question.id)"
                               >
                                 <Trash2 class="h-4 w-4 text-red-600" />
                               </Button>
@@ -287,8 +392,11 @@ const cancelEdit = () => {
                   </div>
                 </div>
 
-                <div v-if="categories.find(c => c.id === selectedCategory)?.questions.length === 0" class="text-center text-gray-500 py-8">
-                  No questions added yet for this category.
+                <div 
+                  v-if="questions.length === 0" 
+                  class="text-center text-gray-500 py-8"
+                >
+                  No questions found for this category. Add your first question above.
                 </div>
               </div>
             </CardContent>

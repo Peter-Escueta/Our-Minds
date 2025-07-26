@@ -11,8 +11,11 @@ class Assessment extends Model
 
     protected $fillable = ['child_id', 'assessment_date', 'notes'];
 
+    protected $attributes = [
+    'assessment_date' => null, 
+];
     protected $casts = [
-        'assessment_date' => 'date',
+        'assessment_date' => 'datetime',
     ];
 
     public function child()

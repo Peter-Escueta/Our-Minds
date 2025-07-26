@@ -3,6 +3,7 @@ import HomeView from '@/views/HomeView.vue'
 import ChecklistView from '@/views/ChecklistView.vue'
 import EditChecklistView from '@/views/EditChecklistView.vue'
 import ConsentFormView from '@/views/ConsentFormView.vue'
+import ChildListView from '@/views/ChildListView.vue'
 
 type UserRole = 'assessor' | 'consultant'
 
@@ -15,11 +16,12 @@ const router = createRouter({
       component: HomeView,
       meta: { requiresAuth: false }
     },
-    {
-      path: '/checklist',
-      name: 'checklist',
+{
+      path: '/assessment/:id/create', 
+      name: 'assessment-create',     
       component: ChecklistView,
-      meta: { requiresAuth: true, allowedRoles: ['assessor'] as UserRole[] }
+      meta: { requiresAuth: true, allowedRoles: ['assessor'] as UserRole[] },
+      props: true 
     },
     {
       path: '/edit-checklist',
@@ -28,10 +30,16 @@ const router = createRouter({
       meta: { requiresAuth: true, allowedRoles: ['consultant'] as UserRole[] }
     },
     {
-      path: '/screening',
+      path: '/children/create',
       name: 'screening',
       component: ConsentFormView,
       meta: { requiresAuth: true, allowedRoles: ['consultant'] as UserRole[] }
+    },
+     {
+      path: '/children',
+      name: 'children',
+      component: ChildListView,
+      meta: { requiresAuth: true, allowedRoles: ['consultant', 'assessor'] as UserRole[] }
     }
   ]
 })
