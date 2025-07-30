@@ -1,9 +1,12 @@
 <?php
 
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChildController;
+use App\Http\Controllers\Api\AssessmentEvaluationController;
+use App\Http\Controllers\Api\ChildConsentController;
 use App\Http\Controllers\Api\AssessmentController;
 use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\SkillCategoryController;
@@ -24,10 +27,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('children', ChildController::class);
     Route::get('/children/search', [ChildController::class, 'search']);
     Route::get('/children/{child}/assessments/count', [ChildController::class, 'assessmentCount']);
-    
+    Route::get('/children/{child}/consent', [ChildConsentController::class, 'generateConsent']);
     // Assessment routes (unchanged)
     Route::apiResource('children.assessments', AssessmentController::class)->except(['update']);
     Route::get('/children/{child}/assessments/latest', [AssessmentController::class, 'latest']);
+    Route::apiResource('assessments.evaluations', AssessmentEvaluationController::class)
+    ->only(['index', 'store']);
     
     /*------------------
     | Questions & Categories - UPDATED SECTION
@@ -56,6 +61,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/children/{child}/progress', [ReportController::class, 'progressReport']);
     });
     
+    Route::get('evaluations/{evaluation}', [AssessmentEvaluationController::class, 'show']);
+    Route::get('evaluations/{evaluation}/pdf', [AssessmentEvaluationController::class, 'generateEvaluation']);
     // Dashboard (unchanged)
     Route::prefix('dashboard')->group(function () {
         Route::get('/stats', [ReportController::class, 'dashboardStats']);
@@ -63,7 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/age-distribution', [ReportController::class, 'ageDistribution']);
     });
 });
-
+Route::get('/assessments/{assessment}/results', [AssessmentController::class, 'results']);
 // Public endpoints (unchanged)
 Route::get('/health', fn () => response()->json(['status' => 'healthy']));
 Route::get('/docs', function () { /* ... */ });

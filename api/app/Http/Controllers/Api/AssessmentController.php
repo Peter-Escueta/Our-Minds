@@ -130,6 +130,74 @@ public function store(Request $request, Child $child)
         }
     }
 
+public function results(Assessment $assessment)
+{
+    try {
+        $assessment->load([
+            'responses.question.category',
+            'child'
+        ]);
+
+        $results = [];
+        $totalQuestionsByCategory = [];
+        $canCountByCategory = [];
+
+        // Group responses by category
+        foreach ($assessment->responses as $response) {
+            $categoryId = $response->question->skill_category_id;
+            $categoryName = $response->question->category->name;
+            $questionAge = $response->question->age; // Get age from the question
+            
+            if (!isset($results[$categoryId])) {
+                $results[$categoryId] = [
+                    'name' => $categoryName,
+                    'age' => $questionAge, // Store age with category
+                    'responses' => []
+                ];
+                $totalQuestionsByCategory[$categoryId] = 0;
+                $canCountByCategory[$categoryId] = 0;
+            }
+
+            // Format response text
+            $responseText = $response->response === 'can' 
+                ? "can {$response->question->text}"
+                : "has difficulty {$response->question->text}";
+
+            $results[$categoryId]['responses'][] = $responseText;
+            
+            $totalQuestionsByCategory[$categoryId]++;
+            if ($response->response === 'can') {
+                $canCountByCategory[$categoryId]++;
+            }
+        }
+
+        // Determine competency for each category
+        foreach ($results as $categoryId => &$categoryData) {
+            $percentage = ($canCountByCategory[$categoryId] / $totalQuestionsByCategory[$categoryId]) * 100;
+            $categoryData['competency'] = $percentage >= 50 
+                ? "within the range of expected competency for age {$categoryData['age']}"
+                : "below the expected range for age {$categoryData['age']}";
+        }
+
+        return response()->json([
+            'data' => [
+                'child_name' => $assessment->child->first_name,
+                'assessment_date' => $assessment->assessment_date,
+                'categories' => array_values($results)
+            ],
+            'message' => 'Assessment results retrieved successfully'
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('AssessmentController@results error: ' . $e->getMessage());
+        return response()->json([
+            'message' => 'Failed to retrieve assessment results',
+            'error' => config('app.debug') ? $e->getMessage() : null
+        ], 500);
+    }
+}
+
+
     /**
      * Get the latest assessment for a child
      */

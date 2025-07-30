@@ -27,4 +27,8 @@ class Assessment extends Model
     {
         return $this->hasMany(AssessmentResponse::class);
     }
+    public function evaluations()
+{
+    return $this->hasMany(AssessmentEvaluation::class);
+}
 }
