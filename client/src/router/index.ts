@@ -4,6 +4,9 @@ import ChecklistView from '@/views/ChecklistView.vue'
 import EditChecklistView from '@/views/EditChecklistView.vue'
 import ConsentFormView from '@/views/ConsentFormView.vue'
 import ChildListView from '@/views/ChildListView.vue'
+import ResultView from '@/views/ResultView.vue'
+import EvaluationView from '@/views/EvaluationView.vue'
+import ReadEvaluationView from '@/views/ReadEvaluationView.vue'
 
 type UserRole = 'assessor' | 'consultant'
 
@@ -17,7 +20,7 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
 {
-      path: '/assessment/:id/create', 
+      path: '/assessments/:id/create', 
       name: 'assessment-create',     
       component: ChecklistView,
       meta: { requiresAuth: true, allowedRoles: ['assessor'] as UserRole[] },
@@ -40,6 +43,24 @@ const router = createRouter({
       name: 'children',
       component: ChildListView,
       meta: { requiresAuth: true, allowedRoles: ['consultant', 'assessor'] as UserRole[] }
+    },
+    {
+  path: '/assessments/:id/results',
+  name: 'assessment-results',
+  component: ResultView,
+  meta: { requiresAuth: true }
+},
+  {
+  path: '/assessments/:id/evaluate',
+  name: 'assessment-evaluate',
+  component: EvaluationView,
+  meta: { requiresAuth: true }
+},
+   {
+      path: '/evaluations/:id',
+      name: 'evaluation-view',
+      component: ReadEvaluationView,
+      meta: { requiresAuth: true } 
     }
   ]
 })
@@ -53,10 +74,10 @@ router.beforeEach((to, from, next) => {
       next({ name: 'home' })
     } else if (to.meta.allowedRoles && userRole && !(to.meta.allowedRoles as UserRole[]).includes(userRole)) {
       if (userRole === 'assessor') {
-        next({ name: 'checklist' })
+        next({ name: 'children' })
       } else if (userRole === 'consultant') {
         next({ name: 'edit-checklist' })
-      } else {
+      } else {'/'
         next({ name: 'home' }) 
       }
     } else {
@@ -65,7 +86,7 @@ router.beforeEach((to, from, next) => {
   } else {
     if (token && to.name === 'home') {
       if (userRole === 'assessor') {
-        next({ name: 'checklist' })
+        next({ name: 'children' })
       } else if (userRole === 'consultant') {
         next({ name: 'edit-checklist' })
       } else {

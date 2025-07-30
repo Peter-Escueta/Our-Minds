@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent, 
+  DropdownMenuItem 
+} from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 const router = useRouter()
+const userRole = localStorage.getItem('user_role')
 
 const handleLogout = () => {
   localStorage.removeItem('auth_token')
   localStorage.removeItem('user_role')
   router.push('/')
-}
-
-const navigateToSettings = () => {
-  router.push('/settings')
 }
 
 const navigateTo = (routeName: string) => {
@@ -24,25 +26,35 @@ const navigateTo = (routeName: string) => {
 <template>
   <header class="bg-white shadow-sm sticky top-0 z-10">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <!-- Logo Section -->
       <div class="flex items-center space-x-8">
-        <div class="flex items-center space-x-2 cursor-pointer" @click="navigateTo('edit-checklist')">
+        <div 
+          class="flex items-center space-x-2 cursor-pointer" 
+          @click="navigateTo(userRole === 'assessor' ? 'children' : 'edit-checklist')"
+        >
           <div class="text-2xl font-bold text-primary">UNAWA</div>
           <div class="text-sm text-secondary">Child Development Assessment System</div>
         </div>
         
+        <!-- Navigation Links (Conditional by Role) -->
         <nav class="hidden md:flex space-x-6">
-          <button 
-            class="text-sm font-medium hover:text-primary transition-colors"
-            @click="navigateTo('edit-checklist')"
-          >
-            Edit Checklist
-          </button>
-          <button 
-            class="text-sm font-medium hover:text-primary transition-colors"
-            @click="navigateTo('screening')"
-          >
-            New Screening
-          </button>
+          <!-- Consultant-Only Links -->
+          <template v-if="userRole === 'consultant'">
+            <button 
+              class="text-sm font-medium hover:text-primary transition-colors"
+              @click="navigateTo('edit-checklist')"
+            >
+              Edit Checklist
+            </button>
+            <button 
+              class="text-sm font-medium hover:text-primary transition-colors"
+              @click="navigateTo('screening')"
+            >
+              New Screening
+            </button>
+          </template>
+          
+          <!-- Common Link (Both Roles) -->
           <button 
             class="text-sm font-medium hover:text-primary transition-colors"
             @click="navigateTo('children')"
@@ -52,6 +64,7 @@ const navigateTo = (routeName: string) => {
         </nav>
       </div>
       
+      <!-- Avatar Dropdown (Same for Both Roles) -->
       <div class="flex items-center space-x-4">
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
@@ -62,11 +75,8 @@ const navigateTo = (routeName: string) => {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent class="w-56" align="end" forceMount>
-            <DropdownMenuItem @click="navigateToSettings">
-              <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="handleLogout" class="text-red-600">
+          <DropdownMenuContent class="w-56" align="end">
+            <DropdownMenuItem @select="handleLogout" class="text-red-600 focus:text-red-600">
               <span>Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

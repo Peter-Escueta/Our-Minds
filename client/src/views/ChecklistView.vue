@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-vue-next'
+import Header from '@/components/Header.vue'
 const props = defineProps<{
   id: string
 }>()
@@ -174,14 +175,10 @@ onMounted(fetchData)
 
 <template>
   <div class="min-h-screen">
-    <header class="bg-white shadow-sm sticky top-0 z-10">
-      <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-        <div class="flex items-center space-x-2">
-          <div class="text-2xl font-bold text-primary">UNAWA</div>
-          <div class="text-sm text-secondary">Child Development Assessment System</div>
-        </div>
-      </div>
-    </header>
+    <div class="hidden">
+  bg-green-700 bg-red-700 bg-blue-700 bg-yellow-700 bg-purple-700
+</div>
+    <Header />
 
     <main class="container mx-auto font-display py-8 border-1">
       <h1 class="text-center text-2xl text-primary font-bold mb-5">Child Development Assessment Form</h1>
@@ -203,10 +200,9 @@ onMounted(fetchData)
             :class="category.color"
           >
             <div class="grid grid-cols-12 items-center">
-              <div class="col-span-10">
-                <CardTitle class="font-bold text-white">{{ category.name }}</CardTitle>
-              </div>
-              <div class="col-span-2 flex justify-end items-center space-x-2 text-white">
+              <div class="col-span-12">
+                <CardTitle class="font-bold text-white">{{ category.name }} </CardTitle>
+                     <div class=" flex justify-end items-center space-x-2 text-white">
                 <Label class="whitespace-nowrap">Age:</Label>
                 <Select 
                   :modelValue="selectedAges[category.id]" 
@@ -226,6 +222,8 @@ onMounted(fetchData)
                   </SelectContent>
                 </Select>
               </div>
+              </div>
+         
             </div>
           </CardHeader>
           

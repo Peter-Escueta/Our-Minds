@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { MoreHorizontal } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+import ConsentButton from '../ConsentButton.vue'
 
 const router = useRouter()
 const userRole = localStorage.getItem('user_role')
@@ -21,7 +22,7 @@ const props = defineProps<{
 const emit = defineEmits(['edit', 'delete', 'view', 'refresh'])
 
 const handleView = () => {
-  router.push(`/children/${props.child.id}`)
+  router.push(`/assessments/${props.child.id}/results`)
 }
 
 const handleEdit = () => {
@@ -54,9 +55,9 @@ const hasAssessments = computed(() => {
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">
-      <DropdownMenuItem @click="handleView">
+      <!-- <DropdownMenuItem @click="handleView">
         View Details
-      </DropdownMenuItem>
+      </DropdownMenuItem> -->
       
       <DropdownMenuItem @click="handleEdit">
         Edit
@@ -73,7 +74,7 @@ const hasAssessments = computed(() => {
         </DropdownMenuItem>
         <DropdownMenuItem 
           v-if="hasAssessments"
-          @click="() => router.push(`/assessments?childId=${props.child.id}`)"
+          @click="handleView"
         >
           View Assessments
         </DropdownMenuItem>
@@ -90,9 +91,14 @@ const hasAssessments = computed(() => {
         </DropdownMenuItem>
         <DropdownMenuItem 
           v-if="hasAssessments"
-          @click="() => router.push(`/evaluations?childId=${props.child.id}`)"
+          @click="() => router.push(`/evaluations/${props.child.id}`)"
         >
           View Evaluations
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <ConsentButton 
+            :childId="props.child.id" 
+            class="w-full text-left"></ConsentButton>
         </DropdownMenuItem>
       </template>
       

@@ -35,7 +35,7 @@ const handleLogin = async () => {
     toast.success('Login successful')
     
     if (response.data.user.role === 'assessor') {
-      router.push({ name: 'checklist' })
+      router.push({ name: 'children' })
     } else if (response.data.user.role === 'consultant') {
       router.push({ name: 'edit-checklist' })
     } else {

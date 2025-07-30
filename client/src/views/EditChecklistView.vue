@@ -24,7 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Plus, Trash2, Pencil, Loader2 } from 'lucide-vue-next'
-import ConsultantHeader from '@/components/ConsultantHeader.vue'
+import Header from '@/components/Header.vue'
 
 const router = useRouter()
 
@@ -216,7 +216,7 @@ watch(selectedCategory, fetchQuestions)
 
 <template>
   <div class="min-h-screen">
-    <ConsultantHeader />
+    <Header />
 
     <main class="container mx-auto font-display py-8">
       <h1 class="text-center text-2xl text-primary font-bold mb-8">Manage Assessment Questions</h1>

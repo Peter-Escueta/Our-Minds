@@ -19,7 +19,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import axios from 'axios'
-import ConsultantHeader from '@/components/ConsultantHeader.vue'
+import Header from '@/components/Header.vue'
 
 const formData = ref({
   surname: '',
@@ -194,7 +194,7 @@ const resetForm = () => {
 <template>
   <div class="min-h-screen flex flex-col bg-gray-50">
     <!-- Header -->
-   <ConsultantHeader/>
+   <Header/>
 
     <!-- Main Content with Borders -->
     <div class="flex-1 border-l border-r border-gray-200 mx-auto w-full max-w-[90rem] bg-white">
