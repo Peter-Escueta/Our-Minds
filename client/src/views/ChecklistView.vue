@@ -172,7 +172,6 @@ onMounted(fetchData)
 </div>
   
 
-    <main class="container mx-auto font-display py-8 border-1">
       <h1 class="text-center text-2xl text-primary font-bold mb-5">Child Development Assessment Form</h1>
 
       <div v-if="isLoading" class="flex justify-center py-8">
@@ -273,6 +272,5 @@ onMounted(fetchData)
           Submit Assessment
         </Button>
       </div>
-    </main>
   </div>
 </template>
