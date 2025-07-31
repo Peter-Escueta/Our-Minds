@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { MoreHorizontal } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
-import ConsentButton from '../ConsentButton.vue'
+import ConsentButton from '@/components/ConsentButton.vue'
 
 const router = useRouter()
 const userRole = localStorage.getItem('user_role')
@@ -38,12 +38,20 @@ const handleAssess = () => {
 }
 
 const handleEvaluate = () => {
-  router.push(`/evaluations/create?childId=${props.child.id}`)
+  router.push(`/assessments/${props.child.id}/evaluate`)
 }
 
 const hasAssessments = computed(() => {
   return (props.child.assessments_count ?? 0) > 0 || 
          (props.child.assessments && props.child.assessments.length > 0)
+})
+
+const hasEvaluations = computed(() => {
+  if (!props.child.assessments) return false
+  return props.child.assessments.some(assessment => 
+    (assessment.evaluations_count ?? 0) > 0 ||
+    (assessment.evaluations && assessment.evaluations.length > 0)
+  )
 })
 </script>
 
@@ -55,14 +63,6 @@ const hasAssessments = computed(() => {
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">
-      <!-- <DropdownMenuItem @click="handleView">
-        View Details
-      </DropdownMenuItem> -->
-      
-      <DropdownMenuItem @click="handleEdit">
-        Edit
-      </DropdownMenuItem>
-      
       <!-- Assessor Actions -->
       <template v-if="userRole === 'assessor'">
         <DropdownMenuItem 
@@ -83,14 +83,14 @@ const hasAssessments = computed(() => {
       <!-- Consultant Actions -->
       <template v-if="userRole === 'consultant'">
         <DropdownMenuItem 
-          v-if="hasAssessments"
+          v-if="hasAssessments && !hasEvaluations"
           @click="handleEvaluate"
           class="text-primary font-medium"
         >
           Create Evaluation
         </DropdownMenuItem>
         <DropdownMenuItem 
-          v-if="hasAssessments"
+          v-if="hasEvaluations"
           @click="() => router.push(`/evaluations/${props.child.id}`)"
         >
           View Evaluations

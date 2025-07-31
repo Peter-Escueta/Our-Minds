@@ -120,8 +120,8 @@ const handleSubmit = async () => {
       action: {
         label: 'View Details',
         onClick: () => {
-          console.log('Navigating to child details')
-        },
+          
+          },
       },
     })
 
@@ -192,16 +192,10 @@ const resetForm = () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col bg-gray-50">
-    <!-- Header -->
-   <Header/>
-
-    <!-- Main Content with Borders -->
-    <div class="flex-1 border-l border-r border-gray-200 mx-auto w-full max-w-[90rem] bg-white">
-      <main class="container mx-auto font-display py-8 px-20 h-full">
+ 
         <Card class="border-0 shadow-none">
           <CardHeader>
-            <CardTitle class="text-center text-2xl">Child Information Form</CardTitle>
+            <CardTitle class="text-center text-2xl font-bold text-primary">Child Information Form</CardTitle>
           </CardHeader>
           <CardContent>
             <form @submit.prevent="handleSubmit" class="space-y-6">
@@ -464,7 +458,5 @@ const resetForm = () => {
             </form>
           </CardContent>
         </Card>
-      </main>
-    </div>
-  </div>
+
 </template>

@@ -1,4 +1,3 @@
-// src/types/child.ts
 export type Gender = 'male' | 'female' | 'other'
 
 export interface Child {
@@ -44,6 +43,15 @@ export interface Assessment {
   child_id: string
   assessment_date: string
   notes?: string
+  evaluations_count?: number
+  evaluations?: Evaluation[]
+}
+
+export interface Evaluation {
+  id: string
+  assessment_id: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface ApiResponse<T> {
@@ -64,7 +72,6 @@ export interface PaginatedResponse<T> {
 
 export interface ChildrenResponse extends PaginatedResponse<Child> {}
 
-// For table column definitions
 export interface ColumnDef<T> {
   id: string
   header: string | ((props: any) => any)
@@ -74,7 +81,6 @@ export interface ColumnDef<T> {
   enableHiding?: boolean
 }
 
-// For table filtering
 export interface TableFilter {
   id: string
   value: any

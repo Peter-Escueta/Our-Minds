@@ -7,38 +7,64 @@
     <style>
         body {
             font-family: Calibri, sans-serif;
-            font-size: 12pt;
-            line-height: 1.5;
+            font-size: 13px;
+            line-height: 1.4;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin-bottom: 15px;
         }
 
-        h1 {
-            text-align: center;
-            font-size: 16pt;
-            margin: 20px 0;
+        td,
+        th {
+            border: 1px solid black;
+            padding: 6px;
+            vertical-align: top;
+        }
+
+        .section-label {
+            background-color: #888;
+            color: white;
+            font-weight: bold;
+            padding: 8px;
+            margin: 20px 0 10px 0;
+        }
+
+        .category-label {
+            background-color: #e0e0e0;
+            /* Lighter gray */
+            font-weight: bold;
+            padding: 8px;
+            margin: 15px 0 5px 0;
+            border-left: 4px solid #888;
+            /* Accent border */
+        }
+
+        .no-border {
+            border: none !important;
         }
 
         h2 {
-            background-color: #333;
-            color: white;
-            padding: 5px 10px;
-            font-size: 14pt;
-            margin: 25px 0 10px;
+            text-align: center;
+            margin: 30px 0 10px;
+            text-transform: uppercase;
         }
 
         h3 {
-            font-size: 13pt;
-            text-decoration: underline;
             margin: 15px 0 5px;
         }
 
+        p {
+            text-align: justify;
+            margin: 8px 0;
+        }
+
         ul {
-            margin: 5px 0;
-            padding-left: 20px;
+            margin: 8px 0;
+            padding-left: 25px;
         }
 
         li {
@@ -47,51 +73,118 @@
 
         .competency {
             font-style: italic;
-            margin: 10px 0 15px;
-            padding-left: 20px;
-        }
-
-        .divider {
-            border-top: 1px dashed #333;
-            margin: 15px 0;
+            margin: 10px 0;
+            padding-left: 8px;
         }
 
         .footer {
-            margin-top: 40px;
-            font-size: 11pt;
-        }
-
-        .signature {
-            margin-top: 60px;
+            margin-top: 30px;
         }
 
         .disclaimer {
             font-style: italic;
-            margin-top: 30px;
-            border-top: 1px solid #333;
-            padding-top: 10px;
+            margin: 15px 0;
+        }
+
+        .signature {
+            margin-top: 50px;
         }
     </style>
 </head>
 
 <body>
     <div class="header">
-        <img src="{{ $logo ?? public_path('images/pdf-header.jpg') }}" alt="Logo"
+        <img src="{{ public_path('images/pdf-header.jpg') }}" alt="Logo"
             style="width: 100%; max-width: 100%; height: auto;">
     </div>
 
-    <h1>Assessment Evaluation Report</h1>
+    <table>
+        <!-- Top row with name fields and placement -->
+        <tr>
+            <td>Surname
+                <br>
+                {{ $child->surname }}
+            </td>
+            <td>First Name
+                <br>
+                {{ $child->first_name }}
+            </td>
+            <td>Middle Name
+                <br>
+                {{ $child->middle_name }}
+            </td>
+            <td rowspan="1">
+                O Initial O Follow Up
+                <br>
+                <strong>Current Educational Placement</strong>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3"><strong>Address:</strong> {{ $child->address }}</td>
+            <td><strong>Email:</strong> {{ $child->email }}</td>
+        </tr>
+
+        <tr>
+            <td><strong>Date of Birth</strong><br>{{ $child->date_of_birth->format('m/d/Y') }}</td>
+            <td><strong>Date of Assessment</strong><br>{{ $child->date_of_assessment->format('m/d/Y') }}</td>
+            <td><strong>Age at Consult</strong><br>{{ $child->age_at_consult }}</td>
+            <td><strong>Gender</strong>: {{ $child->gender }}<br><strong>Siblings</strong>: {{ $child->siblings }}</td>
+        </tr>
+
+        <tr>
+            <td colspan="2">
+                <strong>Mother's Name/Occupation/Contact Number</strong><br>
+                {{ $child->mother_name }} / {{ $child->mother_occupation }} / {{ $child->mother_contact }}
+            </td>
+            <td colspan="2">
+                <strong>Father's Name/Occupation/Contact Number</strong><br>
+                {{ $child->father_name }} / {{ $child->father_occupation }} / {{ $child->father_contact }}
+            </td>
+        </tr>
+
+        <tr>
+            <td><strong>Medical Diagnosis/Impression</strong><br>{{ $child->medical_diagnosis }}</td>
+            <td><strong>Referring Doctor</strong><br>{{ $child->referring_doctor }}</td>
+            <td><strong>Date of Assessment</strong><br>{{ $child->date_of_assessment->format('m/d/Y') }}</td>
+            <td>
+                <strong>Last Assessment:</strong> {{ $child->last_assessment_date?->format('m/d/Y') ?? 'N/A' }}<br>
+                <strong>Follow-Up Date:</strong> {{ $child->follow_up_date?->format('m/d/Y') ?? 'N/A' }}
+            </td>
+        </tr>
+
+        <tr>
+            <td><strong>Occupational Therapy</strong><br>{{ $child->occupational_therapy ? 'Yes' : 'No' }}</td>
+            <td><strong>Physical Therapy</strong><br>{{ $child->physical_therapy ? 'Yes' : 'No' }}</td>
+            <td><strong>Behavioral Therapy</strong><br>{{ $child->behavioral_therapy ? 'Yes' : 'No' }}</td>
+            <td><strong>Speech Therapy</strong><br>{{ $child->speech_therapy ? 'Yes' : 'No' }}</td>
+        </tr>
+
+        <tr>
+            <td><strong>School</strong><br>{{ $child->school }}</td>
+            <td><strong>Grade</strong><br>{{ $child->grade }}</td>
+            <td><strong>Placement</strong><br>{{ $child->placement }}</td>
+            <td><strong>Year</strong><br>{{ $child->year }}</td>
+        </tr>
+
+        <tr>
+            <td colspan="4" class="section-label">* REASON FOR CONSULTATION</td>
+        </tr>
+        <tr>
+            <td colspan="4">{{ $child->reason_for_consultation ?? '[Reason for consultation goes here]' }}</td>
+        </tr>
+    </table>
 
     <!-- BACKGROUND INFORMATION -->
-    <h2>BACKGROUND INFORMATION</h2>
+    <div class="section-label">BACKGROUND INFORMATION</div>
     <p>{{ $evaluation->background_information }}</p>
 
     <!-- DEVELOPMENTAL AREAS -->
-    <h2>DEVELOPMENTAL AREAS (sensory-motor, cognitive, language, psychosocial & self-help skills)</h2>
+    <div class="section-label">DEVELOPMENTAL AREAS (sensory-motor, cognitive, language, psychosocial & self-help skills)
+    </div>
     <p>The assessment result shows that {{ $child->first_name }}:</p>
 
     @foreach ($categories as $category)
-        <h3>{{ strtoupper($category['name']) }}</h3>
+        <div class="category-label">{{ strtoupper($category['name']) }}</div>
         <ul>
             @foreach ($category['responses'] as $response)
                 <li>{{ $response }}</li>
@@ -100,17 +193,15 @@
         <div class="competency">
             <em>{{ $category['competency'] }}</em>
         </div>
-        @if (!$loop->last)
-            <div class="divider"></div>
-        @endif
     @endforeach
 
-    <!-- FINAL SUMMARY -->
-    <h2>FINAL SUMMARY</h2>
-    <p>{{ $evaluation->summary_notes }}</p>
+    <i>
+        <p style="text-indent: 4em;">{{ $evaluation->summary_notes }}</p>
+    </i>
+
 
     <!-- RECOMMENDATIONS -->
-    <h2>RECOMMENDATIONS</h2>
+    <div class="section-label">RECOMMENDATIONS</div>
     <ul>
         @foreach ($evaluation->recommendations as $recommendation)
             <li>{{ $recommendation }}</li>
@@ -118,7 +209,7 @@
     </ul>
 
     <!-- RECOMMENDED WEBSITES -->
-    <h2>RECOMMENDED WEBSITES FOR PARENTS</h2>
+    <div class="section-label">RECOMMENDED WEBSITES FOR PARENTS</div>
     <ul>
         <li>Autism Speaks: www.autismspeaks.org</li>
         <li>Understood: www.understood.org</li>
@@ -139,7 +230,10 @@
             <p>Evaluated by:</p>
             <br><br>
             <p><strong>RAYMUND E. MINDANAO MA LPT RPm</strong></p>
-            <p>Licensed Psychometrician</p>
+            <p style="font-size:10px">Special Education Specialist/Consultant <br>
+                LPT – 1172639 <br>
+                RPm - 0002113
+            </p>
         </div>
     </div>
 </body>

@@ -27,7 +27,6 @@ export const columns = [
       )
     },
     sortingFn: (rowA, rowB) => {
-      // Sort by surname then first name
       const surnameCompare = rowA.original.surname.localeCompare(rowB.original.surname)
       if (surnameCompare !== 0) return surnameCompare
       return rowA.original.first_name.localeCompare(rowB.original.first_name)
@@ -47,23 +46,23 @@ export const columns = [
         return h('div', 'Invalid date')
       }
     },
-    sortingFn: 'datetime' // Proper date sorting
+    sortingFn: 'datetime'
   }),
   
- columnHelper.accessor('gender', {
-  header: 'Gender',
-  cell: ({ row }) => {
-    const gender = row.getValue('gender')
-    return h(
-      Badge, 
-      { 
-        variant: gender === 'male' ? 'default' : 
-                gender === 'female' ? 'secondary' : 'outline'
-      },
-      () => gender.charAt(0).toUpperCase() + gender.slice(1) // ✅ Now a function
-    )
-  }
-}),
+  columnHelper.accessor('gender', {
+    header: 'Gender',
+    cell: ({ row }) => {
+      const gender = row.getValue('gender')
+      return h(
+        Badge, 
+        { 
+          variant: gender === 'male' ? 'default' : 
+                  gender === 'female' ? 'secondary' : 'outline'
+        },
+        () => gender.charAt(0).toUpperCase() + gender.slice(1)
+      )
+    }
+  }),
   
   columnHelper.accessor('mother_name', {
     header: 'Parent/Guardian',
@@ -86,10 +85,15 @@ export const columns = [
   }),
   
   columnHelper.accessor('assessments_count', {
-    header: 'Assessments',
+    header: 'Assessments/Evaluations',
     cell: ({ row }) => {
-      const count = row.getValue('assessments_count') || 0
+      const assessmentsCount = row.getValue('assessments_count') || 0
       const assessments = row.original.assessments || []
+      
+      const evaluationsCount = assessments.reduce((total, assessment) => {
+        return total + (assessment.evaluations_count || (assessment.evaluations ? assessment.evaluations.length : 0))
+      }, 0)
+
       const latestAssessment = assessments.length > 0 
         ? assessments.reduce((latest, current) => 
             new Date(current.assessment_date) > new Date(latest.assessment_date) ? current : latest
@@ -97,10 +101,16 @@ export const columns = [
         : null
       
       return h('div', { class: 'flex flex-col gap-1' }, [
-        h(Badge, {
-          variant: count > 0 ? 'default' : 'secondary',
-          class: 'w-fit'
-        }, () => `${count} assessment${count !== 1 ? 's' : ''}`),
+        h('div', { class: 'flex gap-2' }, [
+          h(Badge, {
+            variant: assessmentsCount > 0 ? 'default' : 'secondary',
+            class: 'w-fit'
+          }, () => `${assessmentsCount} assessment${assessmentsCount !== 1 ? 's' : ''}`),
+          h(Badge, {
+            variant: evaluationsCount > 0 ? 'default' : 'secondary',
+            class: 'w-fit'
+          }, () => `${evaluationsCount} evaluation${evaluationsCount !== 1 ? 's' : ''}`)
+        ]),
         latestAssessment && h('div', { 
           class: 'text-xs text-muted-foreground' 
         }, `Last: ${format(new Date(latestAssessment.assessment_date), 'MMM dd, yyyy')}`)
@@ -110,10 +120,9 @@ export const columns = [
   
   columnHelper.display({
     id: 'actions',
-cell: ({ row }) => h(DropdownAction, { child: row.original }),
+    cell: ({ row }) => h(DropdownAction, { child: row.original }),
     meta: {
-      className: 'sticky right-0 bg-background' // For sticky column
+      className: 'sticky right-0 bg-background'
     }
   })
 ]
-

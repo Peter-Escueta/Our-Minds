@@ -49,7 +49,6 @@ interface SkillCategory {
   questions_count: number
 }
 
-// Reactive state
 const categories = ref<SkillCategory[]>([])
 const questions = ref<Question[]>([])
 const availableAges = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -60,7 +59,6 @@ const editingQuestionId = ref<number | null>(null)
 const isLoading = ref(false)
 const isCategoriesLoading = ref(false)
 
-// Configure axios instance with auth
 const api = axios.create({
   baseURL: 'http://localhost:8000/api',
   headers: {
@@ -69,7 +67,6 @@ const api = axios.create({
   }
 })
 
-// Add auth interceptor
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('auth_token')
   if (token) {
@@ -81,7 +78,6 @@ api.interceptors.request.use(config => {
   return config
 })
 
-// Error handler
 const handleApiError = (error: any, defaultMessage: string) => {
   console.error('API Error:', error)
   
@@ -94,12 +90,10 @@ const handleApiError = (error: any, defaultMessage: string) => {
   }
 }
 
-// Safe find category helper
 const findCategory = (id: number | null) => {
   return categories.value.find(c => c.id === id) ?? null
 }
 
-// Fetch all skill categories
 const fetchCategories = async () => {
   try {
     isCategoriesLoading.value = true
@@ -140,12 +134,10 @@ const fetchQuestions = async () => {
   }
 }
 
-// Get questions filtered by age
 const getQuestionsForAge = (age: number) => {
   return questions.value.filter(q => q.age === age)
 }
 
-// Save or update question
 const saveQuestion = async () => {
   if (!newQuestionText.value.trim() || !selectedCategory.value) {
     toast.warning('Please enter question text and select a category')
@@ -176,14 +168,12 @@ const saveQuestion = async () => {
   }
 }
 
-// Set up question for editing
 const editQuestion = (question: Question) => {
   editingQuestionId.value = question.id
   newQuestionText.value = question.text
   selectedAge.value = question.age
 }
 
-// Delete a question
 const deleteQuestion = async (questionId: number) => {
   try {
     await api.delete(`/questions/${questionId}`)
@@ -194,13 +184,11 @@ const deleteQuestion = async (questionId: number) => {
   }
 }
 
-// Cancel editing mode
 const cancelEdit = () => {
   editingQuestionId.value = null
   newQuestionText.value = ''
 }
 
-// Initialize component
 onMounted(async () => {
   try {
     await fetchCategories()
@@ -210,15 +198,12 @@ onMounted(async () => {
   }
 })
 
-// Watch for category changes
 watch(selectedCategory, fetchQuestions)
 </script>
 
 <template>
   <div class="min-h-screen">
-    <Header />
 
-    <main class="container mx-auto font-display py-8">
       <h1 class="text-center text-2xl text-primary font-bold mb-8">Manage Assessment Questions</h1>
 
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -403,6 +388,5 @@ watch(selectedCategory, fetchQuestions)
           </Card>
         </div>
       </div>
-    </main>
   </div>
 </template>

@@ -5,12 +5,22 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Controller;
 use App\Models\Child;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ChildController extends Controller
 {
 public function index()
 {
-    $children = Child::withCount('assessments')->orderBy('surname')->get();
+    $children = Child::withCount([
+        'assessments',
+    ])
+    ->with(['assessments' => function($query) {
+        $query->withCount('evaluations')
+              ->latest('assessment_date');
+    }])
+    ->orderBy('surname')
+    ->get();
+
     return response()->json($children);
 }
 

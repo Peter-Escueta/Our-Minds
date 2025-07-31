@@ -74,7 +74,7 @@ const handleApiError = (error: any, defaultMessage: string) => {
   }
 }
 
-// Reactive state
+
 const categories = ref<SkillCategory[]>([])
 const questions = ref<Question[]>([])
 const selectedAges = ref<Record<number, number>>({})
@@ -82,40 +82,34 @@ const formResponses = ref<Record<number, string>>({})
 const availableAges = [1,2, 3, 4, 5,6,7,8,9,10,11,12]
 const isLoading = ref(false)
 
-// Fetch all data
+
 const fetchData = async () => {
   try {
     isLoading.value = true
     
-    // Fetch categories first
+   
     const categoriesResponse = await api.get('/skill-categories')
     if (!categoriesResponse.data?.data || !Array.isArray(categoriesResponse.data.data)) {
       throw new Error('Categories data is not in expected format')
     }
     categories.value = categoriesResponse.data.data
     
-    // Initialize selected ages (default to 3)
+   
     categories.value.forEach(category => {
       selectedAges.value[category.id] = 3
     })
     
-    // Then fetch questions - handle different response formats
     const questionsResponse = await api.get('/questions')
-    console.log('Questions API Response:', questionsResponse.data) // Debug log
     
-    // Handle different possible response formats
     let questionsData = []
     if (Array.isArray(questionsResponse.data)) {
-      // Case 1: Response is directly an array
       questionsData = questionsResponse.data
     } else if (questionsResponse.data?.data && Array.isArray(questionsResponse.data.data)) {
-      // Case 2: Response has data property containing array
       questionsData = questionsResponse.data.data
     } else {
       throw new Error('Questions data is not in expected format')
     }
     
-    // Map questions with their categories
     questions.value = questionsData.map((question: any) => {
       const category = categories.value.find(cat => cat.id === question.skill_category_id)
       return {
@@ -124,7 +118,7 @@ const fetchData = async () => {
       }
     })
     
-    console.log('Processed questions:', questions.value) // Debug log
+
     
   } catch (error) {
     handleApiError(error, 'Failed to load assessment data')
@@ -138,13 +132,11 @@ const getQuestionsForCategory = (categoryId: number) => {
   const filtered = questions.value.filter(q => 
     q.skill_category_id === categoryId && q.age === age
   )
-  console.log(`Questions for category ${categoryId}, age ${age}:`, filtered) // Debug log
   return filtered
 }
 
 const handleAgeChange = (categoryId: number, age: number) => {
   selectedAges.value[categoryId] = age
-  // Clear responses when age changes
   const questionIds = getQuestionsForCategory(categoryId).map(q => q.id)
   questionIds.forEach(id => {
     delete formResponses.value[id]
@@ -178,7 +170,7 @@ onMounted(fetchData)
     <div class="hidden">
   bg-green-700 bg-red-700 bg-blue-700 bg-yellow-700 bg-purple-700
 </div>
-    <Header />
+  
 
     <main class="container mx-auto font-display py-8 border-1">
       <h1 class="text-center text-2xl text-primary font-bold mb-5">Child Development Assessment Form</h1>

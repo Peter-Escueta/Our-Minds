@@ -81,12 +81,7 @@ const handleLogin = async () => {
           <div class="grid gap-2">
             <div class="flex items-center">
               <Label for="password">Password</Label>
-              <a
-                href="/forgot-password"
-                class="ml-auto inline-block text-sm underline"
-              >
-                Forgot your password?
-              </a>
+           
             </div>
             <Input 
               id="password" 
@@ -103,16 +98,9 @@ const handleLogin = async () => {
             <span v-if="isLoading">Logging in...</span>
             <span v-else>Login</span>
           </Button>
-          <Button variant="outline" class="w-full" type="button">
-            Login with Google
-          </Button>
+
         </form>
-        <div class="mt-4 text-center text-sm">
-          Don't have an account?
-          <router-link to="/register" class="underline">
-            Sign up
-          </router-link>
-        </div>
+  
       </div>
     </div>
     <div class="hidden bg-muted lg:block">

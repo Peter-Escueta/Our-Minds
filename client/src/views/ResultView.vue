@@ -1,5 +1,4 @@
 <template>
-  <Header />
   <div class="max-w-4xl mx-auto p-6">
 
     <Card v-if="results">
@@ -139,16 +138,14 @@ const results = ref<AssessmentResult | null>(null)
 const activeTab = ref('detailed')
 const isLoading = ref(true)
 
-// Configure axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api', // Note the /api prefix
+  baseURL: 'http://localhost:8000/api', 
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json'
   }
 })
 
-// Add auth interceptor
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('auth_token')
   if (token) {
@@ -168,10 +165,8 @@ const formatDate = (dateString: string) => {
 const fetchResults = async () => {
   try {
     isLoading.value = true
-    console.log('Fetching results for assessment ID:', assessmentId) // Debug log
     
     const response = await api.get(`/assessments/${assessmentId}/results`)
-    console.log('API Response:', response.data) // Debug log
     
     if (!response.data?.data) {
       throw new Error('Invalid response format')
@@ -182,7 +177,7 @@ const fetchResults = async () => {
     console.error('API Error Details:', error)
     toast.error('Failed to load assessment results')
     
-    // More detailed error message
+ 
     if (error.response) {
       console.error('Response data:', error.response.data)
       console.error('Status code:', error.response.status)
@@ -193,7 +188,6 @@ const fetchResults = async () => {
 }
 
 onMounted(() => {
-  console.log('Component mounted, starting data fetch') // Debug log
   fetchResults()
 })
 </script>

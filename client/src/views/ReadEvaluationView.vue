@@ -1,5 +1,4 @@
 <template>
-  <Header />
   <div class="max-w-4xl mx-auto p-6">
     <Card>
       <CardHeader>
@@ -132,7 +131,6 @@ const formatDate = (dateString: string) => {
   })
 }
 
-// Configure axios instance
 const api = axios.create({
   baseURL: 'http://localhost:8000/api',
   headers: {
@@ -141,7 +139,6 @@ const api = axios.create({
   }
 })
 
-// Add auth interceptor
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('auth_token')
   if (token) {

@@ -2,7 +2,7 @@
   <button
     @click="downloadEvaluation"
     :disabled="isLoading"
-    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+    class="bg-green-700 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 text-sm"
   >
     <span v-if="isLoading">
       <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -55,7 +55,6 @@ const downloadEvaluation = async () => {
     document.body.appendChild(link);
     link.click();
     
-    // Clean up
     link.parentNode.removeChild(link);
     window.URL.revokeObjectURL(url);
     

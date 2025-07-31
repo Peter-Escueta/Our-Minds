@@ -18,9 +18,8 @@ import Header from '@/components/Header.vue'
 const router = useRouter()
 const data = ref<Child[]>([])
 const isLoading = ref(true)
-const userRole = localStorage.getItem('user_role') // Get user role from localStorage
+const userRole = localStorage.getItem('user_role') 
 
-// Computed property to check if user is consultant
 const isConsultant = computed(() => userRole === 'consultant')
 
 const handleLogout = () => {
@@ -36,7 +35,7 @@ const navigateToSettings = () => {
 }
 
 const handleAddChild = () => {
-  if (!isConsultant.value) return // Extra protection
+  if (!isConsultant.value) return 
   router.push('/children/create')
 }
 
@@ -63,7 +62,6 @@ const fetchChildren = async () => {
     })
     
     data.value = response.data
-    console.log('Assigned Data:', data.value)
   } catch (error) {
     if (error.response?.status === 401) {
       toast.error('Session expired. Please login again.')
@@ -83,13 +81,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col">
-    <Header />
-    <div class="flex-1 border-l border-r border-gray-200 mx-auto w-full max-w-[90rem]">
-      <main class="container mx-auto font-display py-8 px-20 h-full">
+
         <div class="flex flex-col space-y-4 h-full">
           <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold">Children Management</h1>
+            <h1 class="text-2xl font-bold text-primary">Children Management</h1>
             <Button 
               v-if="isConsultant"
               @click="handleAddChild"
@@ -105,7 +100,5 @@ onMounted(() => {
             class="flex-1"
           />
         </div>
-      </main>
-    </div>
-  </div>
+ 
 </template>
