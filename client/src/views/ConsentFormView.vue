@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -12,14 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import axios from 'axios'
-import Header from '@/components/Header.vue'
 
 const formData = ref({
   surname: '',
@@ -52,23 +47,39 @@ const formData = ref({
   school: '',
   grade: '',
   placement: '',
-  year: ''
+  year: '',
+  reason: '',
 })
 
 const genderOptions = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
-  { value: 'other', label: 'Other' }
+  { value: 'other', label: 'Other' },
 ]
 
 const gradeOptions = [
-  'Pre-K', 'Kindergarten', '1st', '2nd', '3rd', '4th', 
-  '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'
+  'Pre-K',
+  'Kindergarten',
+  '1st',
+  '2nd',
+  '3rd',
+  '4th',
+  '5th',
+  '6th',
+  '7th',
+  '8th',
+  '9th',
+  '10th',
+  '11th',
+  '12th',
 ]
 
 const placementOptions = [
-  'Regular Class', 'Special Education Class', 
-  'Inclusion Program', 'Home School', 'Other'
+  'Regular Class',
+  'Special Education Class',
+  'Inclusion Program',
+  'Home School',
+  'Other',
 ]
 
 const isLoading = ref(false)
@@ -76,7 +87,7 @@ const isLoading = ref(false)
 const handleSubmit = async () => {
   try {
     isLoading.value = true
-    
+
     const toastId = toast('Saving child information', {
       description: 'Please wait while we process your request',
       duration: Infinity,
@@ -105,13 +116,13 @@ const handleSubmit = async () => {
       date_of_birth: formatDate(formData.value.date_of_birth),
       date_of_assessment: formatDate(formData.value.date_of_assessment),
       last_assessment_date: formatDate(formData.value.last_assessment_date),
-      follow_up_date: formatDate(formData.value.follow_up_date)
+      follow_up_date: formatDate(formData.value.follow_up_date),
     }
 
     const response = await axios.post('http://localhost:8000/api/children', payload, {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     })
 
     toast.success('Successfully saved child information', {
@@ -119,16 +130,14 @@ const handleSubmit = async () => {
       id: toastId,
       action: {
         label: 'View Details',
-        onClick: () => {
-          
-          },
+        onClick: () => {},
       },
     })
 
     resetForm()
   } catch (error: any) {
     console.error('Error submitting form:', error)
-    
+
     let errorMessage = 'Failed to save child information'
     if (error.response?.status === 401) {
       errorMessage = 'Session expired. Please login again.'
@@ -182,9 +191,9 @@ const resetForm = () => {
     school: '',
     grade: '',
     placement: '',
-    year: ''
+    year: '',
   }
-  
+
   toast('Form has been reset', {
     description: 'All fields have been cleared',
   })
@@ -192,271 +201,252 @@ const resetForm = () => {
 </script>
 
 <template>
- 
-        <Card class="border-0 shadow-none">
-          <CardHeader>
-            <CardTitle class="text-center text-2xl font-bold text-primary">Child Information Form</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form @submit.prevent="handleSubmit" class="space-y-6">
-              <!-- Personal Information Section -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="space-y-2">
-                  <Label for="surname">Surname</Label>
-                  <Input id="surname" v-model="formData.surname" required />
-                </div>
-                <div class="space-y-2">
-                  <Label for="first_name">First Name</Label>
-                  <Input id="first_name" v-model="formData.first_name" required />
-                </div>
-                <div class="space-y-2">
-                  <Label for="middle_name">Middle Name</Label>
-                  <Input id="middle_name" v-model="formData.middle_name" />
-                </div>
-              </div>
+  <Card class="border-0 shadow-none">
+    <CardHeader>
+      <CardTitle class="text-center text-2xl font-bold text-primary"
+        >Child Information Form</CardTitle
+      >
+    </CardHeader>
+    <CardContent>
+      <form @submit.prevent="handleSubmit" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="space-y-2">
+            <Label for="surname">Surname</Label>
+            <Input id="surname" v-model="formData.surname" required />
+          </div>
+          <div class="space-y-2">
+            <Label for="first_name">First Name</Label>
+            <Input id="first_name" v-model="formData.first_name" required />
+          </div>
+          <div class="space-y-2">
+            <Label for="middle_name">Middle Name</Label>
+            <Input id="middle_name" v-model="formData.middle_name" />
+          </div>
+        </div>
 
-              <!-- Educational Placement -->
-              <div class="space-y-4">
-                <Label>Current Educational Placement</Label>
-                <Input v-model="formData.educational_placement" placeholder="School/Program name" />
-                
-                <div class="flex items-center space-x-4">
-                  <div class="flex items-center space-x-2">
-                    <Checkbox 
-                      id="is_initial_assessment" 
-                      v-model="formData.is_initial_assessment" 
-                    />
-                    <Label for="is_initial_assessment">Initial Assessment</Label>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <Checkbox 
-                      id="is_follow_up" 
-                      v-model="formData.is_follow_up" 
-                    />
-                    <Label for="is_follow_up">Follow-Up</Label>
-                  </div>
-                </div>
-              </div>
+        <div class="space-y-4">
+          <Label>Current Educational Placement</Label>
+          <Input v-model="formData.educational_placement" placeholder="School/Program name" />
 
-              <!-- Contact Information -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-2">
-                  <Label for="address">Address</Label>
-                  <Input id="address" v-model="formData.address" />
-                </div>
-                <div class="space-y-2">
-                  <Label for="email">Email Address</Label>
-                  <Input id="email" v-model="formData.email" type="email" />
-                </div>
-              </div>
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+              <Checkbox id="is_initial_assessment" v-model="formData.is_initial_assessment" />
+              <Label for="is_initial_assessment">Initial Assessment</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <Checkbox id="is_follow_up" v-model="formData.is_follow_up" />
+              <Label for="is_follow_up">Follow-Up</Label>
+            </div>
+          </div>
+        </div>
 
-              <!-- Dates and Demographics -->
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="space-y-2">
-                  <Label for="date_of_birth">Date of Birth</Label>
-                  <Input id="date_of_birth" v-model="formData.date_of_birth" type="date" />
-                </div>
-                <div class="space-y-2">
-                  <Label for="date_of_assessment">Date of Assessment</Label>
-                  <Input id="date_of_assessment" v-model="formData.date_of_assessment" type="date" />
-                </div>
-                <div class="space-y-2">
-                  <Label for="age_at_consult">Age at Consult</Label>
-                  <Input id="age_at_consult" v-model="formData.age_at_consult" placeholder="e.g. 5 years" />
-                </div>
-                <div class="space-y-2">
-                  <Label for="gender">Gender</Label>
-                  <Select v-model="formData.gender">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem 
-                        v-for="option in genderOptions" 
-                        :key="option.value" 
-                        :value="option.value"
-                      >
-                        {{ option.label }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <Label for="address">Address</Label>
+            <Input id="address" v-model="formData.address" />
+          </div>
+          <div class="space-y-2">
+            <Label for="email">Email Address</Label>
+            <Input id="email" v-model="formData.email" type="email" />
+          </div>
+        </div>
 
-              <!-- Siblings -->
-              <div class="space-y-2">
-                <Label for="siblings">Siblings (names and ages)</Label>
-                <Input id="siblings" v-model="formData.siblings" placeholder="e.g. John (8), Mary (5)" />
-              </div>
-
-              <!-- Parent Information -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader class="pb-2">
-                    <CardTitle class="text-lg">Mother's Information</CardTitle>
-                  </CardHeader>
-                  <CardContent class="space-y-4">
-                    <div class="space-y-2">
-                      <Label for="mother_name">Name</Label>
-                      <Input id="mother_name" v-model="formData.mother_name" />
-                    </div>
-                    <div class="space-y-2">
-                      <Label for="mother_occupation">Occupation</Label>
-                      <Input id="mother_occupation" v-model="formData.mother_occupation" />
-                    </div>
-                    <div class="space-y-2">
-                      <Label for="mother_contact">Contact Number</Label>
-                      <Input id="mother_contact" v-model="formData.mother_contact" type="tel" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader class="pb-2">
-                    <CardTitle class="text-lg">Father's Information</CardTitle>
-                  </CardHeader>
-                  <CardContent class="space-y-4">
-                    <div class="space-y-2">
-                      <Label for="father_name">Name</Label>
-                      <Input id="father_name" v-model="formData.father_name" />
-                    </div>
-                    <div class="space-y-2">
-                      <Label for="father_occupation">Occupation</Label>
-                      <Input id="father_occupation" v-model="formData.father_occupation" />
-                    </div>
-                    <div class="space-y-2">
-                      <Label for="father_contact">Contact Number</Label>
-                      <Input id="father_contact" v-model="formData.father_contact" type="tel" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <!-- Medical Information -->
-              <div class="space-y-4">
-                <div class="space-y-2">
-                  <Label for="medical_diagnosis">Medical Diagnosis/Impression</Label>
-                  <Input id="medical_diagnosis" v-model="formData.medical_diagnosis" />
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="space-y-2">
-                    <Label for="referring_doctor">Referring Doctor</Label>
-                    <Input id="referring_doctor" v-model="formData.referring_doctor" />
-                  </div>
-                  <div class="space-y-2">
-                    <Label for="last_assessment_date">Last Assessment Date</Label>
-                    <Input id="last_assessment_date" v-model="formData.last_assessment_date" type="date" />
-                  </div>
-                </div>
-                
-                <div class="space-y-2">
-                  <Label for="follow_up_date">Follow-Up Date</Label>
-                  <Input id="follow_up_date" v-model="formData.follow_up_date" type="date" />
-                </div>
-              </div>
-
-              <!-- Therapy Services -->
-              <div class="space-y-2">
-                <Label>Therapy Services</Label>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                  <div class="flex items-center space-x-2">
-                    <Checkbox 
-                      id="occupational_therapy" 
-                      v-model="formData.occupational_therapy" 
-                    />
-                    <Label for="occupational_therapy">Occupational Therapy</Label>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <Checkbox 
-                      id="physical_therapy" 
-                      v-model="formData.physical_therapy" 
-                    />
-                    <Label for="physical_therapy">Physical Therapy</Label>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <Checkbox 
-                      id="behavioral_therapy" 
-                      v-model="formData.behavioral_therapy" 
-                    />
-                    <Label for="behavioral_therapy">Behavioral Therapy</Label>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <Checkbox 
-                      id="speech_therapy" 
-                      v-model="formData.speech_therapy" 
-                    />
-                    <Label for="speech_therapy">Speech Therapy</Label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- School Information -->
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="space-y-2">
-                  <Label for="school">School</Label>
-                  <Input id="school" v-model="formData.school" />
-                </div>
-                <div class="space-y-2">
-                  <Label for="grade">Grade</Label>
-                  <Select v-model="formData.grade">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select grade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem 
-                        v-for="grade in gradeOptions" 
-                        :key="grade" 
-                        :value="grade"
-                      >
-                        {{ grade }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div class="space-y-2">
-                  <Label for="placement">Placement</Label>
-                  <Select v-model="formData.placement">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select placement" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem 
-                        v-for="placement in placementOptions" 
-                        :key="placement" 
-                        :value="placement"
-                      >
-                        {{ placement }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div class="space-y-2">
-                  <Label for="year">Year</Label>
-                  <Input id="year" v-model="formData.year" type="number" min="2000" :max="new Date().getFullYear()" />
-                </div>
-              </div>
-
-              <!-- Form Actions -->
-              <div class="flex justify-end space-x-4 pt-6">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  @click="resetForm"
-                  :disabled="isLoading"
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="space-y-2">
+            <Label for="date_of_birth">Date of Birth</Label>
+            <Input id="date_of_birth" v-model="formData.date_of_birth" type="date" />
+          </div>
+          <div class="space-y-2">
+            <Label for="date_of_assessment">Date of Assessment</Label>
+            <Input id="date_of_assessment" v-model="formData.date_of_assessment" type="date" />
+          </div>
+          <div class="space-y-2">
+            <Label for="age_at_consult">Age at Consult</Label>
+            <Input
+              id="age_at_consult"
+              v-model="formData.age_at_consult"
+              placeholder="e.g. 5 years"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="gender">Gender</Label>
+            <Select v-model="formData.gender">
+              <SelectTrigger>
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="option in genderOptions"
+                  :key="option.value"
+                  :value="option.value"
                 >
-                  Reset Form
-                </Button>
-                <Button 
-                  type="submit"
-                  :disabled="isLoading"
-                >
-                  <span v-if="isLoading">Saving...</span>
-                  <span v-else>Submit Information</span>
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                  {{ option.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
+        <div class="space-y-2">
+          <Label for="siblings">Siblings (names and ages)</Label>
+          <Input id="siblings" v-model="formData.siblings" placeholder="e.g. John (8), Mary (5)" />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader class="pb-2">
+              <CardTitle class="text-lg">Mother's Information</CardTitle>
+            </CardHeader>
+            <CardContent class="space-y-4">
+              <div class="space-y-2">
+                <Label for="mother_name">Name</Label>
+                <Input id="mother_name" v-model="formData.mother_name" />
+              </div>
+              <div class="space-y-2">
+                <Label for="mother_occupation">Occupation</Label>
+                <Input id="mother_occupation" v-model="formData.mother_occupation" />
+              </div>
+              <div class="space-y-2">
+                <Label for="mother_contact">Contact Number</Label>
+                <Input id="mother_contact" v-model="formData.mother_contact" type="tel" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader class="pb-2">
+              <CardTitle class="text-lg">Father's Information</CardTitle>
+            </CardHeader>
+            <CardContent class="space-y-4">
+              <div class="space-y-2">
+                <Label for="father_name">Name</Label>
+                <Input id="father_name" v-model="formData.father_name" />
+              </div>
+              <div class="space-y-2">
+                <Label for="father_occupation">Occupation</Label>
+                <Input id="father_occupation" v-model="formData.father_occupation" />
+              </div>
+              <div class="space-y-2">
+                <Label for="father_contact">Contact Number</Label>
+                <Input id="father_contact" v-model="formData.father_contact" type="tel" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <Label for="medical_diagnosis">Medical Diagnosis/Impression</Label>
+            <Input id="medical_diagnosis" v-model="formData.medical_diagnosis" />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <Label for="referring_doctor">Referring Doctor</Label>
+              <Input id="referring_doctor" v-model="formData.referring_doctor" />
+            </div>
+            <div class="space-y-2">
+              <Label for="last_assessment_date">Last Assessment Date</Label>
+              <Input
+                id="last_assessment_date"
+                v-model="formData.last_assessment_date"
+                type="date"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <Label for="follow_up_date">Follow-Up Date</Label>
+            <Input id="follow_up_date" v-model="formData.follow_up_date" type="date" />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <Label>Therapy Services</Label>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+            <div class="flex items-center space-x-2">
+              <Checkbox id="occupational_therapy" v-model="formData.occupational_therapy" />
+              <Label for="occupational_therapy">Occupational Therapy</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <Checkbox id="physical_therapy" v-model="formData.physical_therapy" />
+              <Label for="physical_therapy">Physical Therapy</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <Checkbox id="behavioral_therapy" v-model="formData.behavioral_therapy" />
+              <Label for="behavioral_therapy">Behavioral Therapy</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <Checkbox id="speech_therapy" v-model="formData.speech_therapy" />
+              <Label for="speech_therapy">Speech Therapy</Label>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="space-y-2">
+            <Label for="school">School</Label>
+            <Input id="school" v-model="formData.school" />
+          </div>
+          <div class="space-y-2">
+            <Label for="grade">Grade</Label>
+            <Select v-model="formData.grade">
+              <SelectTrigger>
+                <SelectValue placeholder="Select grade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="grade in gradeOptions" :key="grade" :value="grade">
+                  {{ grade }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="space-y-2">
+            <Label for="placement">Placement</Label>
+            <Select v-model="formData.placement">
+              <SelectTrigger>
+                <SelectValue placeholder="Select placement" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="placement in placementOptions"
+                  :key="placement"
+                  :value="placement"
+                >
+                  {{ placement }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="space-y-2">
+            <Label for="year">Year</Label>
+            <Input
+              id="year"
+              v-model="formData.year"
+              type="number"
+              min="2000"
+              :max="new Date().getFullYear()"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+          <div class="space-y-2">
+            <Label for="reason">Reason</Label>
+            <Textarea id="reason" v-model="formData.reason" />
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-4 pt-6">
+          <Button type="button" variant="outline" @click="resetForm" :disabled="isLoading">
+            Reset Form
+          </Button>
+          <Button type="submit" :disabled="isLoading">
+            <span v-if="isLoading">Saving...</span>
+            <span v-else>Submit Information</span>
+          </Button>
+        </div>
+      </form>
+    </CardContent>
+  </Card>
 </template>
