@@ -22,13 +22,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $token = $user->createToken('access_token')->accessToken;
+        $tokenResult = $user->createToken('access_token')->accessToken;
 
         return response()->json([
-            'token' => $token,
+            'token' => $tokenResult,
+            'token_type' => 'Bearer',
             'user' => $user,
         ]);
     }
+
     public function logout(Request $request)
     {
         $request->user()->token()->revoke();
