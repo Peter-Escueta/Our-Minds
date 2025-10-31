@@ -8,7 +8,6 @@ use App\Models\AssessmentEvaluation;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class AssessmentEvaluationController extends Controller
 {
@@ -33,9 +32,7 @@ class AssessmentEvaluationController extends Controller
                 'data' => $evaluation,
                 'message' => 'Evaluation created successfully'
             ], 201);
-
         } catch (\Exception $e) {
-            Log::error('AssessmentEvaluationController@store error: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Failed to create evaluation',
                 'error' => config('app.debug') ? $e->getMessage() : null
@@ -57,9 +54,7 @@ class AssessmentEvaluationController extends Controller
                 'data' => $evaluations,
                 'message' => 'Evaluations retrieved successfully'
             ]);
-
         } catch (\Exception $e) {
-            Log::error('AssessmentEvaluationController@index error: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Failed to retrieve evaluations',
                 'error' => config('app.debug') ? $e->getMessage() : null
@@ -73,42 +68,67 @@ class AssessmentEvaluationController extends Controller
     public function show(AssessmentEvaluation $evaluation)
     {
         try {
-            // Load all necessary relationships
             $evaluation->load([
                 'assessment.child',
                 'assessment.responses.question.category'
             ]);
 
-            // Format categories with responses
             $categories = [];
+            $assessedAges = [];
+
             foreach ($evaluation->assessment->responses as $response) {
                 $categoryId = $response->question->skill_category_id;
-                
-                if (!isset($categories[$categoryId])) {
-                    $categories[$categoryId] = [
-                        'name' => $response->question->category->name,
-                        'age' => $response->question->age,
+                $categoryName = $response->question->category->name;
+                $questionAge = $response->question->age;
+
+                if (!in_array($questionAge, $assessedAges)) {
+                    $assessedAges[] = $questionAge;
+                }
+
+                $categoryAgeKey = $categoryId . '-' . $questionAge;
+
+                if (!isset($categories[$categoryAgeKey])) {
+                    $categories[$categoryAgeKey] = [
+                        'name' => $categoryName,
+                        'age' => $questionAge,
                         'responses' => [],
+                        'total_questions' => 0,
+                        'can_count' => 0
                     ];
                 }
 
-                $responseText = $response->response === 'can' 
-                    ? "can {$response->question->text}" 
+                $responseText = $response->response === 'can'
+                    ? "can {$response->question->text}"
                     : "has difficulty {$response->question->text}";
-                
-                $categories[$categoryId]['responses'][] = $responseText;
+
+                $categories[$categoryAgeKey]['responses'][] = $responseText;
+                $categories[$categoryAgeKey]['total_questions']++;
+
+                if ($response->response === 'can') {
+                    $categories[$categoryAgeKey]['can_count']++;
+                }
             }
 
-            // Calculate competency for each category
-            foreach ($categories as &$category) {
-                $total = count($category['responses']);
-                $positive = count(array_filter($category['responses'], fn($r) => str_starts_with($r, 'can')));
-                $percentage = ($positive / $total) * 100;
-                
-                $category['competency'] = $percentage >= 50
-                    ? "within the range of expected competency for age {$category['age']}"
-                    : "below the expected range for age {$category['age']}";
+            $formattedCategories = [];
+            foreach ($categories as $categoryData) {
+                $percentage = ($categoryData['can_count'] / $categoryData['total_questions']) * 100;
+
+                $formattedCategories[] = [
+                    'name' => $categoryData['name'],
+                    'age' => $categoryData['age'],
+                    'responses' => $categoryData['responses'],
+                    'competency' => $percentage >= 50
+                        ? "within the range of expected competency for age {$categoryData['age']}"
+                        : "below the expected range for age {$categoryData['age']}"
+                ];
             }
+
+            usort($formattedCategories, function ($a, $b) {
+                if ($a['name'] === $b['name']) {
+                    return $a['age'] <=> $b['age'];
+                }
+                return $a['name'] <=> $b['name'];
+            });
 
             return response()->json([
                 'data' => [
@@ -120,99 +140,127 @@ class AssessmentEvaluationController extends Controller
                     'assessment' => [
                         'child_name' => $evaluation->assessment->child->first_name,
                         'assessment_date' => $evaluation->assessment->assessment_date,
-                        'categories' => array_values($categories)
+                        'assessed_ages' => $assessedAges,
+                        'categories' => $formattedCategories
                     ]
                 ],
                 'message' => 'Evaluation retrieved successfully'
             ]);
-
         } catch (\Exception $e) {
-            Log::error('AssessmentEvaluationController@show error: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Failed to retrieve evaluation',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
-public function generateEvaluation(AssessmentEvaluation $evaluation)
-{
-    try {
-        // Load all necessary relationships
-        $evaluation->load([
-            'assessment.child',
-            'assessment.responses.question.category'
-        ]);
+    public function generateEvaluation(AssessmentEvaluation $evaluation)
+    {
+        try {
+            $centerName = env('CENTER_NAME', 'REDACTED');
+            $centerLocation = env('CENTER_LOCATION', 'REDACTED');
+            $centerContact = env('CENTER_CONTACT', 'REDACTED');
+            $specialist =  env('SPECIALIST', 'REDACTED');
+            $specialistTitle = env('SPECIALIST_TITLE', 'REDACTED');
 
-        $assessment = $evaluation->assessment;
+            $evaluation->load([
+                'assessment.child',
+                'assessment.responses.question.category'
+            ]);
 
-        // Format categories with responses
-        $formattedCategories = [];
-        foreach ($assessment->responses as $response) {
-            $categoryId = $response->question->skill_category_id;
-            
-            if (!isset($formattedCategories[$categoryId])) {
-                $formattedCategories[$categoryId] = [
-                    'name' => $response->question->category->name,
-                    'age' => $response->question->age,
-                    'responses' => [],
+            $assessment = $evaluation->assessment;
+
+            $formattedCategories = [];
+            $assessedAges = [];
+
+            foreach ($assessment->responses as $response) {
+                $categoryId = $response->question->skill_category_id;
+                $categoryName = $response->question->category->name;
+                $questionAge = $response->question->age;
+
+                if (!in_array($questionAge, $assessedAges)) {
+                    $assessedAges[] = $questionAge;
+                }
+
+                $categoryAgeKey = $categoryId . '-' . $questionAge;
+
+                if (!isset($formattedCategories[$categoryAgeKey])) {
+                    $formattedCategories[$categoryAgeKey] = [
+                        'name' => $categoryName,
+                        'age' => $questionAge,
+                        'responses' => [],
+                        'total_questions' => 0,
+                        'can_count' => 0
+                    ];
+                }
+
+                $responseText = $response->response === 'can'
+                    ? "can {$response->question->text}"
+                    : "has difficulty {$response->question->text}";
+
+                $formattedCategories[$categoryAgeKey]['responses'][] = $responseText;
+                $formattedCategories[$categoryAgeKey]['total_questions']++;
+
+                if ($response->response === 'can') {
+                    $formattedCategories[$categoryAgeKey]['can_count']++;
+                }
+            }
+
+            $finalCategories = [];
+            foreach ($formattedCategories as $categoryData) {
+                $percentage = ($categoryData['can_count'] / $categoryData['total_questions']) * 100;
+
+                $finalCategories[] = [
+                    'name' => $categoryData['name'],
+                    'age' => $categoryData['age'],
+                    'responses' => $categoryData['responses'],
+                    'competency' => $percentage >= 50
+                        ? "within the range of expected competency for age {$categoryData['age']}"
+                        : "below the expected range for age {$categoryData['age']}"
                 ];
             }
 
-            $responseText = $response->response === 'can' 
-                ? "can {$response->question->text}" 
-                : "has difficulty {$response->question->text}";
-            
-            $formattedCategories[$categoryId]['responses'][] = $responseText;
+            usort($finalCategories, function ($a, $b) {
+                if ($a['name'] === $b['name']) {
+                    return $a['age'] <=> $b['age'];
+                }
+                return $a['name'] <=> $b['name'];
+            });
+
+            $data = [
+                'evaluation' => $evaluation,
+                'child' => $assessment->child,
+                'assessment_date' => $assessment->assessment_date,
+                'categories' => $finalCategories,
+                'assessed_ages' => $assessedAges,
+                'date' => now()->format('F j, Y'),
+                'centerName' => $centerName,
+                'centerLocation' => $centerLocation,
+                'centerContact' => $centerContact,
+                'specialist' => $specialist,
+                'specialistTitle' => $specialistTitle,
+                'logo' => $this->getBase64Image(public_path('images/logo.png'))
+            ];
+
+            $pdf = Pdf::loadView('evaluation-form', $data)
+                ->setPaper('A4', 'portrait')
+                ->setOptions([
+                    'isRemoteEnabled' => true,
+                    'isHtml5ParserEnabled' => true,
+                    'isPhpEnabled' => true,
+                    'defaultFont' => 'Calibri',
+                    'chroot' => public_path()
+                ]);
+
+            $filename = "evaluation-{$assessment->child->first_name}-{$evaluation->created_at->format('Ymd')}.pdf";
+
+            return $pdf->stream($filename);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to generate evaluation PDF',
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        // Calculate competency for each category
-        foreach ($formattedCategories as &$category) {
-            $total = count($category['responses']);
-            $positive = count(array_filter($category['responses'], fn($r) => str_starts_with($r, 'can')));
-            $percentage = ($positive / $total) * 100;
-            
-            $category['competency'] = $percentage >= 50
-                ? "within the range of expected competency for age {$category['age']}"
-                : "below the expected range for age {$category['age']}";
-        }
-
-        // Prepare data for PDF
-        $data = [
-            'evaluation' => $evaluation,
-            'child' => $assessment->child, // Direct child object
-            'assessment_date' => $assessment->assessment_date,
-            'categories' => array_values($formattedCategories),
-            'date' => now()->format('F j, Y'),
-            'centerName' => 'OUR MINDS Intervention & Therapy Center',
-            'centerLocation' => 'San Pedro Laguna',
-            'centerContact' => '(09912583429)',
-            'specialist' => 'Raymond E. Mindanao MA LPT RPm',
-            'specialistTitle' => 'Licensed Psychometrician',
-            'logo' => $this->getBase64Image(public_path('images/logo.png'))
-        ];
-
-        $pdf = Pdf::loadView('evaluation-form', $data)
-            ->setPaper('A4', 'portrait')
-            ->setOptions([
-                'isRemoteEnabled' => true,
-                'isHtml5ParserEnabled' => true,
-                'isPhpEnabled' => true,
-                'defaultFont' => 'Calibri',
-                'chroot' => public_path()
-            ]);
-
-        $filename = "evaluation-{$assessment->child->first_name}-{$evaluation->created_at->format('Ymd')}.pdf";
-
-        return $pdf->stream($filename);
-
-    } catch (\Exception $e) {
-        Log::error("Evaluation PDF Generation Error: " . $e->getMessage());
-        return response()->json([
-            'error' => 'Failed to generate evaluation PDF',
-            'message' => $e->getMessage()
-        ], 500);
     }
-}
     private function getBase64Image($path)
     {
         if (file_exists($path)) {
