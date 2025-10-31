@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import Header from '@/components/Header.vue'
+import MainHeader from '@/components/MainHeader.vue'
 import { useRoute } from 'vue-router'
 import { computed, onMounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
@@ -17,7 +17,7 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen flex flex-col">
-    <Header v-if="showLayout" />
+    <MainHeader v-if="showLayout" />
     <div
       v-if="showLayout"
       class="flex-1 border-l border-r border-gray-200 mx-auto w-full max-w-[90rem]"
