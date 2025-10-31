@@ -68,7 +68,6 @@ const submitAssessment = async () => {
       const parts = compositeKey.split('-').map(Number)
 
       if (parts.length !== 3) {
-        console.error('Invalid response key format:', compositeKey)
         throw new Error('Invalid response key format')
       }
 
@@ -76,7 +75,6 @@ const submitAssessment = async () => {
 
 
       if (age < 1 || age > 12) {
-        console.error('Invalid age in response:', age, 'from key:', compositeKey)
         throw new Error(`Invalid age: ${age}`)
       }
 
@@ -87,7 +85,6 @@ const submitAssessment = async () => {
       }
     })
 
-    console.log('Submitting responses:', responses) // Debug log
 
     await api.post(`/children/${childId}/assessments`, {
       responses,
