@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { toast } from 'vue-sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -14,190 +12,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import axios from 'axios'
-
-const formData = ref({
-  surname: '',
-  first_name: '',
-  middle_name: '',
-  educational_placement: '',
-  is_initial_assessment: false,
-  is_follow_up: false,
-  address: '',
-  email: '',
-  date_of_birth: '',
-  date_of_assessment: '',
-  age_at_consult: '',
-  gender: '',
-  siblings: '',
-  mother_name: '',
-  mother_occupation: '',
-  mother_contact: '',
-  father_name: '',
-  father_occupation: '',
-  father_contact: '',
-  medical_diagnosis: '',
-  referring_doctor: '',
-  last_assessment_date: '',
-  follow_up_date: '',
-  occupational_therapy: false,
-  physical_therapy: false,
-  behavioral_therapy: false,
-  speech_therapy: false,
-  school: '',
-  grade: '',
-  placement: '',
-  year: '',
-  reason: '',
-})
-
-const genderOptions = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'other', label: 'Other' },
-]
-
-const gradeOptions = [
-  'Pre-K',
-  'Kindergarten',
-  '1st',
-  '2nd',
-  '3rd',
-  '4th',
-  '5th',
-  '6th',
-  '7th',
-  '8th',
-  '9th',
-  '10th',
-  '11th',
-  '12th',
-]
-
-const placementOptions = [
-  'Regular Class',
-  'Special Education Class',
-  'Inclusion Program',
-  'Home School',
-  'Other',
-]
-
-const isLoading = ref(false)
-
-const handleSubmit = async () => {
-  try {
-    isLoading.value = true
-
-    const toastId = toast('Saving child information', {
-      description: 'Please wait while we process your request',
-      duration: Infinity,
-      action: {
-        label: 'Cancel',
-        onClick: () => {
-          toast.dismiss(toastId)
-          isLoading.value = false
-        },
-      },
-    })
-
-    const token = localStorage.getItem('auth_token')
-    if (!token) {
-      throw new Error('Authentication token not found. Please login again.')
-    }
-
-    const formatDate = (dateString: string) => {
-      if (!dateString) return null
-      const date = new Date(dateString)
-      return date.toISOString().split('T')[0]
-    }
-
-    const payload = {
-      ...formData.value,
-      date_of_birth: formatDate(formData.value.date_of_birth),
-      date_of_assessment: formatDate(formData.value.date_of_assessment),
-      last_assessment_date: formatDate(formData.value.last_assessment_date),
-      follow_up_date: formatDate(formData.value.follow_up_date),
-    }
-
-    const response = await axios.post('http://localhost:8000/api/children', payload, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    toast.success('Successfully saved child information', {
-      description: 'The record has been created in the system',
-      id: toastId,
-      action: {
-        label: 'View Details',
-        onClick: () => {},
-      },
-    })
-
-    resetForm()
-  } catch (error: any) {
-    console.error('Error submitting form:', error)
-
-    let errorMessage = 'Failed to save child information'
-    if (error.response?.status === 401) {
-      errorMessage = 'Session expired. Please login again.'
-    } else if (error.response?.data?.message) {
-      errorMessage = error.response.data.message
-    } else if (error.response?.data?.errors) {
-      errorMessage = Object.values(error.response.data.errors).join('\n')
-    }
-
-    toast.error('Submission failed', {
-      description: errorMessage,
-      action: {
-        label: 'Try Again',
-        onClick: () => handleSubmit(),
-      },
-    })
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const resetForm = () => {
-  formData.value = {
-    surname: '',
-    first_name: '',
-    middle_name: '',
-    educational_placement: '',
-    is_initial_assessment: false,
-    is_follow_up: false,
-    address: '',
-    email: '',
-    date_of_birth: '',
-    date_of_assessment: '',
-    age_at_consult: '',
-    gender: '',
-    siblings: '',
-    mother_name: '',
-    mother_occupation: '',
-    mother_contact: '',
-    father_name: '',
-    father_occupation: '',
-    father_contact: '',
-    medical_diagnosis: '',
-    referring_doctor: '',
-    last_assessment_date: '',
-    follow_up_date: '',
-    occupational_therapy: false,
-    physical_therapy: false,
-    behavioral_therapy: false,
-    speech_therapy: false,
-    school: '',
-    grade: '',
-    placement: '',
-    year: '',
-  }
-
-  toast('Form has been reset', {
-    description: 'All fields have been cleared',
-  })
-}
+import { genderOptions, gradeOptions, placementOptions } from '@/data/childFormOptions'
+import { useConsentForm } from '@/composables/useConsentForm'
+import { useAuth } from '@/composables/useAuth'
+const { formData, submitForm, resetForm } = useConsentForm()
+const { isLoading } = useAuth()
 </script>
 
 <template>
@@ -208,7 +27,7 @@ const resetForm = () => {
       >
     </CardHeader>
     <CardContent>
-      <form @submit.prevent="handleSubmit" class="space-y-6">
+      <form @submit.prevent="submitForm" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="space-y-2">
             <Label for="surname">Surname</Label>
