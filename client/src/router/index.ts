@@ -20,11 +20,11 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
 {
-      path: '/assessments/:id/create', 
-      name: 'assessment-create',     
+      path: '/assessments/:id/create',
+      name: 'assessment-create',
       component: ChecklistView,
       meta: { requiresAuth: true, allowedRoles: ['assessor'] as UserRole[] },
-      props: true 
+      props: true
     },
     {
       path: '/edit-checklist',
@@ -60,14 +60,14 @@ const router = createRouter({
       path: '/evaluations/:id',
       name: 'evaluation-view',
       component: ReadEvaluationView,
-      meta: { requiresAuth: true } 
+      meta: { requiresAuth: true }
     }
   ]
 })
 
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('auth_token')
-  const userRole = localStorage.getItem('user_role') as UserRole | null
+  const token = sessionStorage.getItem('auth_token')
+  const userRole = sessionStorage.getItem('user_role') as UserRole | null
 
   if (to.meta.requiresAuth) {
     if (!token) {
@@ -78,7 +78,7 @@ router.beforeEach((to, from, next) => {
       } else if (userRole === 'consultant') {
         next({ name: 'edit-checklist' })
       } else {'/'
-        next({ name: 'home' }) 
+        next({ name: 'home' })
       }
     } else {
       next()
@@ -90,10 +90,10 @@ router.beforeEach((to, from, next) => {
       } else if (userRole === 'consultant') {
         next({ name: 'edit-checklist' })
       } else {
-        next() 
+        next()
       }
     } else {
-      next() 
+      next()
     }
   }
 })
