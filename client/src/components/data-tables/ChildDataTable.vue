@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref, watch, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import {
   FlexRender,
   getCoreRowModel,
@@ -20,8 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import DataTableToolbar from './DataTableToolbar.vue'
-import {Button} from '@/components/ui/button'
-import { ChevronDown } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
   data: Child[]
@@ -30,58 +29,69 @@ const props = defineProps<{
 
 const emit = defineEmits(['refresh'])
 
-// Table state
 const sorting = ref([])
 const columnFilters = ref([])
 const rowSelection = ref({})
 const columnVisibility = ref({})
 
-// Create a reactive reference for the data
 const tableData = computed(() => props.data || [])
 
 const table = useVueTable({
-  get data() { return tableData.value }, // Use getter for reactivity
+  get data() {
+    return tableData.value
+  },
   columns,
   getCoreRowModel: getCoreRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
   getSortedRowModel: getSortedRowModel(),
-  onSortingChange: updater => valueUpdater(updater, sorting),
-  onColumnFiltersChange: updater => valueUpdater(updater, columnFilters),
-  onRowSelectionChange: updater => valueUpdater(updater, rowSelection),
-  onColumnVisibilityChange: updater => valueUpdater(updater, columnVisibility),
+  onSortingChange: (updater) => valueUpdater(updater, sorting),
+  onColumnFiltersChange: (updater) => valueUpdater(updater, columnFilters),
+  onRowSelectionChange: (updater) => valueUpdater(updater, rowSelection),
+  onColumnVisibilityChange: (updater) => valueUpdater(updater, columnVisibility),
   state: {
-    get sorting() { return sorting.value },
-    get columnFilters() { return columnFilters.value },
-    get rowSelection() { return rowSelection.value },
-    get columnVisibility() { return columnVisibility.value },
+    get sorting() {
+      return sorting.value
+    },
+    get columnFilters() {
+      return columnFilters.value
+    },
+    get rowSelection() {
+      return rowSelection.value
+    },
+    get columnVisibility() {
+      return columnVisibility.value
+    },
   },
 })
 
-// Reset to first page when data changes
-watch(tableData, () => {
-  table.setPageIndex(0)
-}, { immediate: true })
+watch(
+  tableData,
+  () => {
+    table.setPageIndex(0)
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <div class="space-y-4">
     <DataTableToolbar :table="table" @refresh="emit('refresh')" />
-    
+
     <div class="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
             <TableHead v-for="header in headerGroup.headers" :key="header.id">
-              <FlexRender 
+              <FlexRender
                 v-if="!header.isPlaceholder"
-                :render="header.column.columnDef.header" 
-                :props="header.getContext()" 
+                :render="header.column.columnDef.header"
+                :props="header.getContext()"
               />
             </TableHead>
           </TableRow>
         </TableHeader>
-        
+
         <TableBody>
           <TableRow v-if="isLoading">
             <TableCell :colspan="columns.length" class="h-24 text-center">
@@ -90,18 +100,16 @@ watch(tableData, () => {
               </div>
             </TableCell>
           </TableRow>
-          
+
           <TableRow v-else-if="table.getRowModel().rows?.length === 0">
             <TableCell :colspan="columns.length" class="h-24 text-center">
               <div class="flex flex-col items-center justify-center gap-2">
                 <span>No records found</span>
-                <Button variant="ghost" size="sm" @click="emit('refresh')">
-                  Retry
-                </Button>
+                <Button variant="ghost" size="sm" @click="emit('refresh')"> Retry </Button>
               </div>
             </TableCell>
           </TableRow>
-          
+
           <TableRow
             v-for="row in table.getRowModel().rows"
             :key="row.id"
@@ -109,26 +117,26 @@ watch(tableData, () => {
             class="hover:bg-muted/50"
           >
             <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-              <FlexRender 
-                :render="cell.column.columnDef.cell" 
-                :props="cell.getContext()" 
-              />
+              <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
             </TableCell>
           </TableRow>
         </TableBody>
       </Table>
     </div>
-    
-      <div class="flex flex-col items-center justify-between gap-4 px-2 sm:flex-row">
+
+    <div class="flex flex-col items-center justify-between gap-4 px-2 sm:flex-row">
       <div class="text-sm text-muted-foreground">
-        Showing {{ table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1 }}-
-        {{ Math.min(
-          (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-          table.getFilteredRowModel().rows.length
-        ) }} of
-        {{ table.getFilteredRowModel().rows.length }} items
+        Showing
+        {{ table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1 }}-
+        {{
+          Math.min(
+            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+            table.getFilteredRowModel().rows.length,
+          )
+        }}
+        of {{ table.getFilteredRowModel().rows.length }} items
       </div>
-      
+
       <div class="flex items-center space-x-2">
         <div class="flex items-center space-x-2">
           <p class="text-sm font-medium">Rows</p>
@@ -142,7 +150,7 @@ watch(tableData, () => {
             </option>
           </select>
         </div>
-        
+
         <div class="flex space-x-2">
           <Button
             variant="outline"
