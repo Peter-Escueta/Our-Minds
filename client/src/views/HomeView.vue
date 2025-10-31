@@ -3,52 +3,20 @@ import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import axios from 'axios'
-import { useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
+import { useAuth } from '@/composables/useAuth'
 
-const router = useRouter()
+const { login, isLoading, errors } = useAuth()
+
 const form = ref({
   email: '',
-  password: ''
+  password: '',
 })
-
-const isLoading = ref(false)
-const errors = ref<Record<string, string>>({})
 
 const handleLogin = async () => {
   try {
-    isLoading.value = true
-    errors.value = {}
-
-    const response = await axios.post('http://localhost:8000/api/login', {
-      email: form.value.email,
-      password: form.value.password,
-      device_name: 'web-browser' 
-    })
-
-    localStorage.setItem('auth_token', response.data.token)
-    localStorage.setItem('user_role', response.data.user.role) 
-    
-    axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
-
-    toast.success('Login successful')
-    
-    if (response.data.user.role === 'assessor') {
-      router.push({ name: 'children' })
-    } else if (response.data.user.role === 'consultant') {
-      router.push({ name: 'edit-checklist' })
-    } else {
-      router.push('/')
-    }
-  } catch (error: any) {
-    if (error.response?.status === 422) {
-      errors.value = error.response.data.errors
-    } else {
-      toast.error(error.response?.data?.message || 'Login failed')
-    }
-  } finally {
-    isLoading.value = false
+    await login(form.value.email, form.value.password)
+  } catch (error) {
+    console.error('Login failed:', error)
   }
 }
 </script>
@@ -75,32 +43,32 @@ const handleLogin = async () => {
               :class="{ 'border-destructive': errors.email }"
             />
             <p v-if="errors.email" class="text-sm text-destructive">
-              {{ errors.email[0] }}
+              {{ errors.email }}
             </p>
           </div>
           <div class="grid gap-2">
             <div class="flex items-center">
               <Label for="password">Password</Label>
-           
             </div>
-            <Input 
-              id="password" 
-              type="password" 
-              required 
+            <Input
+              id="password"
+              type="password"
+              required
               v-model="form.password"
               :class="{ 'border-destructive': errors.password }"
             />
             <p v-if="errors.password" class="text-sm text-destructive">
-              {{ errors.password[0] }}
+              {{ errors.password }}
             </p>
           </div>
           <Button type="submit" class="w-full" :disabled="isLoading">
             <span v-if="isLoading">Logging in...</span>
             <span v-else>Login</span>
           </Button>
-
+          <p v-if="errors.general" class="text-sm text-destructive text-center">
+            {{ errors.general }}
+          </p>
         </form>
-  
       </div>
     </div>
     <div class="hidden bg-muted lg:block">
