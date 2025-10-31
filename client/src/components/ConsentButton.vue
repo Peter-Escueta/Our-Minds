@@ -1,51 +1,56 @@
 <template>
-  <button 
+  <Button
     @click="downloadConsent"
+    :disabled="isLoading"
     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
   >
-    Download Consent Form
-  </button>
+    <Loader2 v-if="isLoading" class="w-4 h-4 mr-2 animate-spin" />
+    {{ isLoading ? 'Downloading...' : 'Download Consent Form' }}
+  </Button>
 </template>
 
-<script setup>
-import { ref } from 'vue';
-import axios from 'axios';
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-vue-next'
+import { useApi } from '@/composables/useApi'
+import { toast } from 'vue-sonner'
 
 const props = defineProps({
   childId: {
     type: Number,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 
-const isLoading = ref(false);
+const { api, handleApiError } = useApi()
+const isLoading = ref(false)
 
 const downloadConsent = async () => {
   try {
-    isLoading.value = true;
-      const token = localStorage.getItem('auth_token')
-    const response = await axios.get(`http://localhost:8000/api/children/${props.childId}/consent`, {
-      responseType: 'blob',
-         headers: {
-        'Authorization': `Bearer ${token}`
-      },
-    });
+    isLoading.value = true
 
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `consent-form-${props.childId}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    
-    // Clean up
-    link.parentNode.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    const response = await api.get(`/children/${props.childId}/consent`, {
+      responseType: 'blob',
+    })
+
+    // Create blob URL and trigger download
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `consent-form-${props.childId}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+
+    link.parentNode?.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    toast.success('Consent form downloaded successfully')
   } catch (error) {
-    console.error('Error downloading consent form:', error);
-    // Handle error (show toast, etc.)
+    console.error('Error downloading consent form:', error)
+    handleApiError(error, 'Failed to download consent form')
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 </script>
