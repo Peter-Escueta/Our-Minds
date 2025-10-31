@@ -27,7 +27,6 @@ Route::get('/docs', function () {
             'POST /login' => 'User authentication',
             'POST /logout' => 'User logout (requires authentication)',
             'GET /user' => 'Get current user (requires authentication)',
-            // Add other endpoints as needed
         ]
     ]);
 });
@@ -89,5 +88,5 @@ Route::middleware('auth:api')->group(function () {
     });
 });
 
-// Public assessment results (if you want this to be publicly accessible)
+// Public assessment results
 Route::get('/assessments/{assessment}/results', [AssessmentController::class, 'results']);
