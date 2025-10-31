@@ -36,6 +36,7 @@ export interface Child {
   assessments_count?: number
   created_at?: string
   updated_at?: string
+  reason?: string
   assessments?: Assessment[]
 }
 export interface Assessment {
