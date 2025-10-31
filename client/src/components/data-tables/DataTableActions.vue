@@ -13,7 +13,7 @@ import { useRouter } from 'vue-router'
 import ConsentButton from '@/components/ConsentButton.vue'
 
 const router = useRouter()
-const userRole = localStorage.getItem('user_role')
+const userRole = sessionStorage.getItem('user_role')
 
 const props = defineProps<{
   child: Child
@@ -42,15 +42,18 @@ const handleEvaluate = () => {
 }
 
 const hasAssessments = computed(() => {
-  return (props.child.assessments_count ?? 0) > 0 || 
-         (props.child.assessments && props.child.assessments.length > 0)
+  return (
+    (props.child.assessments_count ?? 0) > 0 ||
+    (props.child.assessments && props.child.assessments.length > 0)
+  )
 })
 
 const hasEvaluations = computed(() => {
   if (!props.child.assessments) return false
-  return props.child.assessments.some(assessment => 
-    (assessment.evaluations_count ?? 0) > 0 ||
-    (assessment.evaluations && assessment.evaluations.length > 0)
+  return props.child.assessments.some(
+    (assessment) =>
+      (assessment.evaluations_count ?? 0) > 0 ||
+      (assessment.evaluations && assessment.evaluations.length > 0),
   )
 })
 </script>
@@ -65,49 +68,39 @@ const hasEvaluations = computed(() => {
     <DropdownMenuContent align="end">
       <!-- Assessor Actions -->
       <template v-if="userRole === 'assessor'">
-        <DropdownMenuItem 
+        <DropdownMenuItem
           v-if="!hasAssessments"
           @click="handleAssess"
           class="text-primary font-medium"
         >
           Create Assessment
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          v-if="hasAssessments"
-          @click="handleView"
-        >
+        <DropdownMenuItem v-if="hasAssessments" @click="handleView">
           View Assessments
         </DropdownMenuItem>
       </template>
-      
+
       <!-- Consultant Actions -->
       <template v-if="userRole === 'consultant'">
-        <DropdownMenuItem 
+        <DropdownMenuItem
           v-if="hasAssessments && !hasEvaluations"
           @click="handleEvaluate"
           class="text-primary font-medium"
         >
           Create Evaluation
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
           v-if="hasEvaluations"
           @click="() => router.push(`/evaluations/${props.child.id}`)"
         >
           View Evaluations
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <ConsentButton 
-            :childId="props.child.id" 
-            class="w-full text-left"></ConsentButton>
+          <ConsentButton :childId="props.child.id" class="w-full text-left"></ConsentButton>
         </DropdownMenuItem>
       </template>
-      
-      <DropdownMenuItem 
-        class="text-destructive" 
-        @click="handleDelete"
-      >
-        Delete
-      </DropdownMenuItem>
+
+      <DropdownMenuItem class="text-destructive" @click="handleDelete"> Delete </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
 </template>
