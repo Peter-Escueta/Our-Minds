@@ -1,78 +1,29 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
-import { toast } from 'vue-sonner'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ChildDataTable from '@/components/data-tables/ChildDataTable.vue'
 import type { Child } from '@/types/child'
 import Button from '@/components/ui/button/Button.vue'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import Header from '@/components/Header.vue'
+import { useChildren } from '@/composables/useChildren'
+import { useAuth } from '@/composables/useAuth'
 
+const { fetchChildren, data: childrenData, isLoading: childrenLoading } = useChildren()
 const router = useRouter()
 const data = ref<Child[]>([])
 const isLoading = ref(true)
-const userRole = localStorage.getItem('user_role') 
+const { isConsultant } = useAuth()
 
-const isConsultant = computed(() => userRole === 'consultant')
+watch(childrenData, (newData) => {
+  data.value = newData
+})
 
-const handleLogout = () => {
-  localStorage.removeItem('auth_token')
-  localStorage.removeItem('user_role')
-  axios.defaults.headers.common['Authorization'] = ''
-  toast.success('Logged out successfully')
-  router.push('/login')
-}
-
-const navigateToSettings = () => {
-  router.push('/settings')
-}
+watch(childrenLoading, (newLoading) => {
+  isLoading.value = newLoading
+})
 
 const handleAddChild = () => {
-  if (!isConsultant.value) return 
+  if (!isConsultant.value) return
   router.push('/children/create')
-}
-
-const handleRefresh = () => {
-  fetchChildren()
-}
-
-const fetchChildren = async () => {
-  try {
-    isLoading.value = true
-    const token = localStorage.getItem('auth_token') 
-    
-    if (!token) {
-      throw new Error('No authentication token found')
-    }
-
-    const response = await axios.get('http://localhost:8000/api/children', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      params: {
-        with: 'assessments' 
-      }
-    })
-    
-    data.value = response.data
-  } catch (error) {
-    if (error.response?.status === 401) {
-      toast.error('Session expired. Please login again.')
-      router.push('/') 
-    } else {
-      toast.error('Failed to fetch children')
-      console.error('Error:', error)
-    }
-  } finally {
-    isLoading.value = false
-  }
 }
 
 onMounted(() => {
@@ -81,24 +32,17 @@ onMounted(() => {
 </script>
 
 <template>
+  <div class="flex flex-col space-y-4 h-full">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-bold text-primary">Children Management</h1>
+      <Button v-if="isConsultant" @click="handleAddChild"> Add New Child </Button>
+    </div>
 
-        <div class="flex flex-col space-y-4 h-full">
-          <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-primary">Children Management</h1>
-            <Button 
-              v-if="isConsultant"
-              @click="handleAddChild"
-            >
-              Add New Child
-            </Button>
-          </div>
-          
-          <ChildDataTable 
-            :data="data" 
-            :isLoading="isLoading"
-            @refresh="fetchChildren"
-            class="flex-1"
-          />
-        </div>
- 
+    <ChildDataTable
+      :data="childrenData"
+      :isLoading="isLoading"
+      @refresh="fetchChildren"
+      class="flex-1"
+    />
+  </div>
 </template>
