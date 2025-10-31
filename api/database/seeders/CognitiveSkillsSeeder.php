@@ -33,7 +33,7 @@ class CognitiveSkillsSeeder extends Seeder
                 'complete simple analogies like ceiling/up or floor/??',
                 'point to 5 to 6 colors',
                 'point to letters or numerals when named',
-                'rote count to 4',
+                ' count to 4',
                 'recognize several common signs or store names',
             ],
             5 => [
@@ -41,7 +41,7 @@ class CognitiveSkillsSeeder extends Seeder
                 'give amounts up to 19',
                 'identify coins',
                 'name letters or numerals out of order',
-                'rote count to 10',
+                ' count to 10',
                 'name 10 colors',
                 'use letter names as sounds to invent spelling',
                 'know sounds of consonants and short vowels',
