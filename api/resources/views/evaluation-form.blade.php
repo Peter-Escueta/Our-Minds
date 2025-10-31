@@ -35,12 +35,18 @@
 
         .category-label {
             background-color: #e0e0e0;
-            /* Lighter gray */
             font-weight: bold;
             padding: 8px;
             margin: 15px 0 5px 0;
             border-left: 4px solid #888;
-            /* Accent border */
+        }
+
+        .age-label {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            padding: 6px;
+            margin: 10px 0 5px 0;
+            border-left: 3px solid #666;
         }
 
         .no-border {
@@ -89,6 +95,16 @@
         .signature {
             margin-top: 50px;
         }
+
+        .age-badge {
+            display: inline-block;
+            background: #666;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 
@@ -99,7 +115,6 @@
     </div>
 
     <table>
-        <!-- Top row with name fields and placement -->
         <tr>
             <td>Surname
                 <br>
@@ -174,33 +189,54 @@
         </tr>
     </table>
 
-    <!-- BACKGROUND INFORMATION -->
     <div class="section-label">BACKGROUND INFORMATION</div>
     <p>{{ $evaluation->background_information }}</p>
 
-    <!-- DEVELOPMENTAL AREAS -->
     <div class="section-label">DEVELOPMENTAL AREAS (sensory-motor, cognitive, language, psychosocial & self-help skills)
     </div>
     <p>The assessment result shows that {{ $child->first_name }}:</p>
 
-    @foreach ($categories as $category)
-        <div class="category-label">{{ strtoupper($category['name']) }}</div>
-        <ul>
-            @foreach ($category['responses'] as $response)
-                <li>{{ $response }}</li>
-            @endforeach
-        </ul>
-        <div class="competency">
-            <em>{{ $category['competency'] }}</em>
+    @php
+        $groupedCategories = [];
+        foreach ($categories as $category) {
+            $groupedCategories[$category['name']][] = $category;
+        }
+    @endphp
+
+    @foreach ($groupedCategories as $categoryName => $ageCategories)
+        <div class="category-label">
+            {{ strtoupper($categoryName) }}
+            @if(count($ageCategories) > 1)
+                @foreach($ageCategories as $ageCat)
+                    <span class="age-badge">Age {{ $ageCat['age'] }}</span>
+                @endforeach
+            @endif
         </div>
+
+        @foreach($ageCategories as $category)
+            @if(count($ageCategories) > 1)
+                <div class="age-label">Age {{ $category['age'] }} Assessment</div>
+            @endif
+
+            <ul>
+                @foreach ($category['responses'] as $response)
+                    <li>{{ $response }}</li>
+                @endforeach
+            </ul>
+            <div class="competency">
+                <em>{{ $category['competency'] }}</em>
+            </div>
+
+            @if(!$loop->last)
+                <div style="margin: 15px 0; border-bottom: 1px dashed #ccc;"></div>
+            @endif
+        @endforeach
     @endforeach
 
     <i>
         <p style="text-indent: 4em;">{{ $evaluation->summary_notes }}</p>
     </i>
 
-
-    <!-- RECOMMENDATIONS -->
     <div class="section-label">RECOMMENDATIONS</div>
     <ul>
         @foreach ($evaluation->recommendations as $recommendation)
@@ -208,7 +244,6 @@
         @endforeach
     </ul>
 
-    <!-- RECOMMENDED WEBSITES -->
     <div class="section-label">RECOMMENDED WEBSITES FOR PARENTS</div>
     <ul>
         <li>Autism Speaks: www.autismspeaks.org</li>
