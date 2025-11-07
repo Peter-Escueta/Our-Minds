@@ -22,7 +22,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $tokenResult = $user->createToken('access_token')->accessToken;
+        $tokenResult = $user->createToken('access_token')->plainTextToken;
 
         return response()->json([
             'token' => $tokenResult,
@@ -33,7 +33,8 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->token()->revoke();
+        $request->user()->currentAccessToken()->delete();
+
 
         return response()->json(['message' => 'Logged out successfully']);
     }

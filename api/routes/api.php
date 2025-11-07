@@ -32,7 +32,7 @@ Route::get('/docs', function () {
 });
 
 // Protected routes with Passport
-Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     // User routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', fn(Request $request) => $request->user());
