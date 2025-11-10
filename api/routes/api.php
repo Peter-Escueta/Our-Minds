@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AssessmentController;
 use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\SkillCategoryController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,6 +80,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Evaluation routes
     Route::get('evaluations/{evaluation}', [AssessmentEvaluationController::class, 'show']);
     Route::get('evaluations/{evaluation}/pdf', [AssessmentEvaluationController::class, 'generateEvaluation']);
+
+    //User routes
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
 
     // Dashboard
     Route::prefix('dashboard')->group(function () {
