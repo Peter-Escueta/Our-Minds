@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { toast } from 'vue-sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -27,6 +26,7 @@ import {
   TagsInputItemText,
 } from '@/components/ui/tags-input'
 import { useFilter } from 'reka-ui'
+import router from '@/router'
 
 const props = defineProps<{
   id: string
@@ -88,9 +88,10 @@ const handleAgeSelect = (categoryId: number, age: number) => {
 }
 
 const handleFormSubmit = async () => {
+  console.log('Submitting', formResponses.value)
   const success = await submitAssessment()
   if (success) {
-    toast.success('Form submitted successfully!')
+    router.push('/children')
   }
 }
 
@@ -227,7 +228,7 @@ onMounted(async () => {
                   class="grid grid-cols-12 p-4 border-t text-xl hover:bg-gray-50"
                 >
                   <div class="col-span-1 flex justify-center">
-                    <RadioGroup v-model="formResponses[`${category.id}-${question.id}-${age}`]">
+                    <RadioGroup v-model="formResponses[`${question.id}-${age}`]">
                       <RadioGroupItem value="can" :id="`${question.id}-${age}-can`" />
                     </RadioGroup>
                   </div>
@@ -239,7 +240,7 @@ onMounted(async () => {
                   </div>
 
                   <div class="col-span-1 flex justify-center">
-                    <RadioGroup v-model="formResponses[`${category.id}-${question.id}-${age}`]">
+                    <RadioGroup v-model="formResponses[`${question.id}-${age}`]">
                       <RadioGroupItem value="cannot" :id="`${question.id}-${age}-cannot`" />
                     </RadioGroup>
                   </div>
