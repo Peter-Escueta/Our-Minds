@@ -1,4 +1,3 @@
-// composables/useChildren.ts
 import { ref } from 'vue'
 import { useApi } from '@/composables/useApi'
 import type { Child } from '@/types/child'
