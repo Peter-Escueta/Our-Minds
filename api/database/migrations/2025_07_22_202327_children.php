@@ -41,6 +41,7 @@ return new class extends Migration
             $table->string('grade')->nullable();
             $table->string('placement')->nullable();
             $table->string('year')->nullable();
+            $table->text('reason')->nullable();
             $table->timestamps();
         });
     }

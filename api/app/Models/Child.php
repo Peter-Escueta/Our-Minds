@@ -40,7 +40,8 @@ class Child extends Model
         'school',
         'grade',
         'placement',
-        'year'
+        'year',
+        'reason'
     ];
 
     protected $casts = [

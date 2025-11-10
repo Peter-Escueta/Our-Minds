@@ -9,20 +9,20 @@ use Illuminate\Support\Facades\DB;
 
 class ChildController extends Controller
 {
-public function index()
-{
-    $children = Child::withCount([
-        'assessments',
-    ])
-    ->with(['assessments' => function($query) {
-        $query->withCount('evaluations')
-              ->latest('assessment_date');
-    }])
-    ->orderBy('surname')
-    ->get();
+    public function index()
+    {
+        $children = Child::withCount([
+            'assessments',
+        ])
+            ->with(['assessments' => function ($query) {
+                $query->withCount('evaluations')
+                    ->latest('assessment_date');
+            }])
+            ->orderBy('surname')
+            ->get();
 
-    return response()->json($children);
-}
+        return response()->json($children);
+    }
 
 
     public function store(Request $request)
@@ -59,6 +59,7 @@ public function index()
             'grade' => 'nullable|string|max:50',
             'placement' => 'nullable|string|max:255',
             'year' => 'nullable|int',
+            'reason' => 'nullable|string',
         ]);
 
         $child = Child::create($validated);
@@ -77,7 +78,7 @@ public function index()
             'surname' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
-            'educational_placement' => 'nullable|string|max:255',       
+            'educational_placement' => 'nullable|string|max:255',
             'is_initial_assessment' => 'boolean',
             'is_follow_up' => 'boolean',
             'address' => 'nullable|string',
@@ -105,6 +106,7 @@ public function index()
             'grade' => 'nullable|string|max:50',
             'placement' => 'nullable|string|max:255',
             'year' => 'nullable|string|max:50',
+            'reason' => 'nullable|string',
         ]);
 
         $child->update($validated);
@@ -124,10 +126,10 @@ public function index()
 
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('surname', 'like', "%$search%")
-                  ->orWhere('first_name', 'like', "%$search%")
-                  ->orWhere('mother_name', 'like', "%$search%");
+                    ->orWhere('first_name', 'like', "%$search%")
+                    ->orWhere('mother_name', 'like', "%$search%");
             });
         }
 
