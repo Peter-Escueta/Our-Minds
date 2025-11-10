@@ -47,6 +47,12 @@ const { navigateTo } = useNavigation()
             >
               New Screening
             </button>
+            <button
+              class="text-sm font-medium hover:text-primary transition-colors"
+              @click="navigateTo('account-management')"
+            >
+              Account Management
+            </button>
           </template>
 
           <!-- Common Link (Both Roles) -->
