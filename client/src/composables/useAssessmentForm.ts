@@ -45,37 +45,39 @@ export function useAssessmentForm(childId: string) {
     }
   }
 
-  const handleAgeRemove = (categoryId: number, age: number) => {
-    if (selectedAges.value[categoryId]) {
+const handleAgeRemove = (categoryId: number, age: number) => {
+  if (selectedAges.value[categoryId]) {
+    selectedAges.value[categoryId] = selectedAges.value[categoryId].filter(a => a !== age)
 
-      selectedAges.value[categoryId] = selectedAges.value[categoryId].filter(a => a !== age)
 
+    Object.keys(formResponses).forEach(key => {
+      const parts = key.split('-').map(Number)
+      if (parts.length === 2 && parts[1] === age) {
 
-      Object.keys(formResponses).forEach(key => {
-        if (key.startsWith(`${categoryId}-`) && key.endsWith(`-${age}`)) {
+        const [questionId, responseAge] = parts
+        const question = questions.value.find(q => q.id === questionId)
+        if (question && question.skill_category_id === categoryId) {
           delete formResponses[key]
         }
-      })
-    }
+      }
+    })
   }
-
-
+}
 const submitAssessment = async () => {
   try {
-
     const responses = Object.entries(formResponses).map(([compositeKey, value]) => {
-
       const parts = compositeKey.split('-').map(Number)
 
-      if (parts.length !== 3) {
-        throw new Error('Invalid response key format')
+      if (parts.length !== 2) {
+        console.error('Invalid key format:', compositeKey)
+        return null
       }
 
-      const [categoryId, questionId, age] = parts
-
+      const [questionId, age] = parts
 
       if (age < 1 || age > 12) {
-        throw new Error(`Invalid age: ${age}`)
+        console.error(`Invalid age: ${age} in key: ${compositeKey}`)
+        return null
       }
 
       return {
@@ -83,8 +85,12 @@ const submitAssessment = async () => {
         age: age,
         response: value
       }
-    })
+    }).filter(Boolean)
 
+    if (responses.length === 0) {
+      toast.error('No valid responses to submit')
+      return false
+    }
 
     await api.post(`/children/${childId}/assessments`, {
       responses,
@@ -92,6 +98,7 @@ const submitAssessment = async () => {
     })
 
     toast.success('Assessment submitted successfully')
+
 
     Object.keys(formResponses).forEach(key => {
       delete formResponses[key]
@@ -102,7 +109,6 @@ const submitAssessment = async () => {
     return false
   }
 }
-
   const hasResponses = computed(() => Object.keys(formResponses).length > 0)
 
   return {
