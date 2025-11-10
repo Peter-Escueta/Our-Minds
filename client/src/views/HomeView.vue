@@ -71,13 +71,11 @@ const handleLogin = async () => {
         </form>
       </div>
     </div>
-    <div class="hidden bg-muted lg:block">
+    <div class="hidden lg:flex items-center justify-center bg-muted">
       <img
-        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'%3E%3Crect width='100%25' height='100%25' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' fill='%239ca3af' font-size='40' font-family='Arial' dy='.3em' text-anchor='middle'%3EPlaceholder%3C/text%3E%3C/svg%3E"
-        alt="Placeholder"
-        width="1920"
-        height="1080"
-        class="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+        src="/images/our-minds-logo.png"
+        alt="Our Minds Logo"
+        class="max-h-[300px] w-auto object-contain bg-muted"
       />
     </div>
   </div>
