@@ -7,6 +7,7 @@ import ChildListView from '@/views/ChildListView.vue'
 import ResultView from '@/views/ResultView.vue'
 import EvaluationView from '@/views/EvaluationView.vue'
 import ReadEvaluationView from '@/views/ReadEvaluationView.vue'
+import AccountManagementView from '@/views/AccountManagementView.vue'
 
 type UserRole = 'assessor' | 'consultant'
 
@@ -43,6 +44,12 @@ const router = createRouter({
       name: 'children',
       component: ChildListView,
       meta: { requiresAuth: true, allowedRoles: ['consultant', 'assessor'] as UserRole[] }
+    },
+    {
+      path: '/account-management',
+      name: 'account-management',
+      component: AccountManagementView,
+      meta: { requiresAuth: true, allowedRoles:['consultant'] as UserRole[] }
     },
     {
   path: '/assessments/:id/results',
