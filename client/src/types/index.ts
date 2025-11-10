@@ -13,7 +13,19 @@ export interface SkillCategory {
   color: string
   questions_count?: number
 }
+export interface User {
+  created_at?: string
+  id: string
+  email: string
+  name: string
+  role: UserRole
+  updated_at?: string
+}
+enum UserRole {
+  ASSESSOR = 'assessor',
+  CONSULTANT = 'consultant',
 
+}
 export interface AssessmentResult {
   child_name: string
   assessment_date: string
