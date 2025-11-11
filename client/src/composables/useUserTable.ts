@@ -6,12 +6,12 @@ export function useUserTable() {
   const users = ref<User[]>([])
   const isLoading = ref(false)
   const { api } = useApi()
-  const API_USER_ENDPOINT = import.meta.env.VITE_API_USER_ENDPOINT
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
   const fetchUsers = async () => {
     try {
       isLoading.value = true
-      const respone = await api.get(API_USER_ENDPOINT)
-      users.value = respone.data
+      const response = await api.get(API_BASE_URL + '/users')
+      users.value = response.data
     } catch (error) {
       console.error('Error fetching users:', error)
     } finally {
