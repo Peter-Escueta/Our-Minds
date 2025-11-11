@@ -185,7 +185,7 @@
             <td colspan="4" class="section-label">* REASON FOR CONSULTATION</td>
         </tr>
         <tr>
-            <td colspan="4">{{ $child->reason_for_consultation ?? '[Reason for consultation goes here]' }}</td>
+            <td colspan="4">{{ $child->reason ?? '[Reason for consultation goes here]' }}</td>
         </tr>
     </table>
 
