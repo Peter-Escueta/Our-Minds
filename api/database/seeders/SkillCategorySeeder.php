@@ -16,6 +16,7 @@ class SkillCategorySeeder extends Seeder
             ['name' => 'Language Skills', 'slug' => 'language', 'color' => 'bg-blue-700'],
             ['name' => 'Cognitive Skills', 'slug' => 'cognitive', 'color' => 'bg-yellow-700'],
             ['name' => 'Gross Motor Skills', 'slug' => 'gross-motor', 'color' => 'bg-purple-700'],
+            ['name' => 'Other Psychosocial Skills', 'slug' => 'other-skills', 'color' => 'bg-gray-700'],
         ];
 
         foreach ($categories as $category) {
