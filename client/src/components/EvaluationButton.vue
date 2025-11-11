@@ -64,16 +64,13 @@ const downloadEvaluation = async () => {
   try {
     isLoading.value = true
     const token = sessionStorage.getItem('auth_token')
-
-    const response = await axios.get(
-      `http://localhost:8000/api/evaluations/${props.evaluationId}/pdf`,
-      {
-        responseType: 'blob',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+    const response = await axios.get(`${API_BASE_URL}/evaluations/${props.evaluationId}/pdf`, {
+      responseType: 'blob',
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-    )
+    })
 
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
