@@ -17,7 +17,7 @@ export function useChildren() {
         params: { with: 'assessments' },
       })
 
-      data.value = response.data
+      data.value = response.data.data
     } catch (error) {
 
       console.error('Error fetching children:', error)
