@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useApi } from '@/composables/useApi'
-import type { Child } from '@/types/child'
+import type { Child, Therapy } from '@/types/child'
 import { useAuth } from '@/composables/useAuth'
 import { formatDate } from '@/utils/date'
 import { toast } from 'vue-sonner'
@@ -9,6 +9,11 @@ export function useConsentForm() {
   const { isLoading } = useAuth()
   const { api, handleApiError } = useApi()
   const API_CHILDREN_ENDPOINT = import.meta.env.VITE_API_CHILDREN_ENDPOINT
+  const hasOccupationalTherapy = ref(false)
+  const hasPhysicalTherapy = ref(false)
+  const hasBehavioralTherapy = ref(false)
+  const hasSpeechTherapy = ref(false)
+
 
   const formData = ref<Partial<Child>>({
     surname: '',
@@ -34,10 +39,7 @@ export function useConsentForm() {
     referring_doctor: '',
     last_assessment_date: '',
     follow_up_date: '',
-    occupational_therapy: false,
-    physical_therapy: false,
-    behavioral_therapy: false,
-    speech_therapy: false,
+    therapies: [] as Therapy[],
     school: '',
     grade: '',
     placement: '',
@@ -92,5 +94,5 @@ const resetForm = () => {
     }
   }
 
-  return { formData, isLoading, submitForm, resetForm }
+  return { formData, isLoading, submitForm, resetForm, hasOccupationalTherapy, hasPhysicalTherapy, hasBehavioralTherapy, hasSpeechTherapy }
 }
