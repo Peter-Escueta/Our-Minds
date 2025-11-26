@@ -33,10 +33,6 @@ class Child extends Model
         'referring_doctor',
         'last_assessment_date',
         'follow_up_date',
-        'occupational_therapy',
-        'physical_therapy',
-        'behavioral_therapy',
-        'speech_therapy',
         'school',
         'grade',
         'placement',
@@ -60,5 +56,9 @@ class Child extends Model
     public function assessments()
     {
         return $this->hasMany(Assessment::class);
+    }
+    public function therapies()
+    {
+        return $this->hasMany(Therapy::class);
     }
 }
