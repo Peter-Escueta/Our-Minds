@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { watch, ref, capitalize } from 'vue'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -20,9 +22,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Plus, Trash2, Pencil, Loader2 } from 'lucide-vue-next'
+import { Plus, Trash2, Pencil, Loader2, Satellite } from 'lucide-vue-next'
 import { useChecklist } from '@/composables/useChecklist'
-
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { useApi } from '@/composables/useApi'
+import { ssrInterpolate } from 'vue/server-renderer'
+const { api, handleApiError } = useApi()
 const {
   categories,
   questions,
@@ -41,20 +52,98 @@ const {
   deleteQuestion,
   cancelEdit,
 } = useChecklist()
-
+const category = ref('')
+const colors = [
+  'slate',
+  'gray',
+  'zinc',
+  'neutral',
+  'red',
+  'stone',
+  'orange',
+  'yellow',
+  'lime',
+  'green',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'rose',
+]
+const color = ref()
+async function createCategory() {
+  try {
+    const response = await api.post('/skill-categories', {
+      name: category.value,
+      color: color.value,
+    })
+    const data = response.data.data
+    categories.value.push(data)
+    category.value = ''
+    color.value = ''
+  } catch (error) {
+    handleApiError(error)
+  }
+}
+async function deleteCategory(categoryId: number) {
+  try {
+    const response = await api.delete('/skill-categories/' + categoryId)
+    const deletedId = response.data.category.id
+    categories.value = categories.value.filter((c) => c.id !== deletedId)
+  } catch (error) {
+    handleApiError(error)
+  }
+}
 watch(selectedCategory, fetchQuestions)
 </script>
 
 <template>
   <div class="min-h-screen">
     <h1 class="text-center text-2xl text-primary font-bold mb-8">Manage Assessment Questions</h1>
-
+    <div
+      class="bg-orange-700 bg-cyan-700 bg-yellow-700 bg-lime-700 bg-green-700 bg-emerald-700 bg-teal-700 bg-sky-700 bg-indigo-700 bg-violet-700 bg-fuchsia-700 bg-purple-700 bg-pink-700 bg-rose-700 bg-blue-700 bg-slate-700 bg-gray-700 bg-zinc-700 bg-neutral-700 bg-red-700 bg-stone-700"
+    ></div>
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <!-- Left sidebar - Category selection -->
       <div class="lg:col-span-1 space-y-4">
         <Card>
-          <CardHeader>
+          <CardHeader class="flex items-center justify-between">
             <CardTitle>Categories</CardTitle>
+            <Dialog>
+              <form>
+                <DialogTrigger as-child>
+                  <Button> Add New </Button>
+                  <DialogContent>
+                    <DialogClose></DialogClose>
+                    <DialogTitle> Create a new category </DialogTitle>
+                    <Label>Category Name</Label>
+                    <Input v-model="category"></Input>
+                    <Label>Header Color</Label>
+                    <Select v-model="color">
+                      <SelectTrigger
+                        ><SelectValue placeholder="Select a header color"></SelectValue
+                      ></SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Colors</SelectLabel>
+                          <SelectItem v-for="color in colors" :key="color" :value="color">
+                            {{ capitalize(color) }}
+                            <div class="w-4 h-4 rounded-full" :class="`bg-${color}-700`"></div
+                          ></SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    <Button @click="createCategory()">Submit </Button>
+                  </DialogContent>
+                </DialogTrigger>
+              </form>
+            </Dialog>
           </CardHeader>
           <CardContent>
             <div v-if="isCategoriesLoading" class="flex justify-center py-4">
@@ -71,7 +160,8 @@ watch(selectedCategory, fetchQuestions)
                 @click="selectedCategory = category.id"
               >
                 <span class="truncate">{{ category.name }}</span>
-                <Badge class="ml-2">{{ category.questions_count }}</Badge>
+                <Badge class="ml-2">{{ category.questions_count || 0 }}</Badge>
+                <Button class="bg-red-700 h-6 w-6" @click="deleteCategory(category.id)">X</Button>
               </Button>
               <div v-if="categories.length === 0" class="text-center text-gray-500 py-2">
                 No categories available

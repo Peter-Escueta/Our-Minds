@@ -75,7 +75,7 @@ const handleLogin = async () => {
       <img
         src="/images/our-minds-logo.png"
         alt="Our Minds Logo"
-        class="max-h-[300px] w-auto object-contain bg-muted"
+        class="max-h-[400px] w-auto object-contain bg-muted"
       />
     </div>
   </div>

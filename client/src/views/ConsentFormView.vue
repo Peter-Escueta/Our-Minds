@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
+import { TherapyType, TherapyTypeLabels, type Therapy } from '@/types/child'
 import {
   Select,
   SelectContent,
@@ -15,16 +17,106 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { genderOptions, gradeOptions, placementOptions } from '@/data/childFormOptions'
 import { useConsentForm } from '@/composables/useConsentForm'
 import { useAuth } from '@/composables/useAuth'
+
 const { formData, submitForm, resetForm } = useConsentForm()
 const { isLoading } = useAuth()
+
+// Initialize therapy details for each therapy type
+const therapyDetails = ref<Record<TherapyType, Therapy>>({
+  [TherapyType.BEHAVIORAL]: {
+    type: TherapyType.BEHAVIORAL,
+    is_received: false,
+    therapy_center: '',
+    therapist_name: '',
+    therapist_contact_number: '',
+    therapist_email: '',
+  },
+  [TherapyType.SPEECH]: {
+    type: TherapyType.SPEECH,
+    is_received: false,
+    therapy_center: '',
+    therapist_name: '',
+    therapist_contact_number: '',
+    therapist_email: '',
+  },
+  [TherapyType.OCCUPATIONAL]: {
+    type: TherapyType.OCCUPATIONAL,
+    is_received: false,
+    therapy_center: '',
+    therapist_name: '',
+    therapist_contact_number: '',
+    therapist_email: '',
+  },
+  [TherapyType.PHYSICAL]: {
+    type: TherapyType.PHYSICAL,
+    is_received: false,
+    therapy_center: '',
+    therapist_name: '',
+    therapist_contact_number: '',
+    therapist_email: '',
+  },
+})
+
+// Computed for template
+const therapyList = computed(() =>
+  Object.values(TherapyType).map((type) => ({
+    type,
+    details: therapyDetails.value[type],
+    label: TherapyTypeLabels[type],
+  })),
+)
+
+function toggleTherapy(therapyType: TherapyType) {
+  const therapy = therapyDetails.value[therapyType]
+  therapy.is_received = !therapy.is_received
+
+  // Update formData.therapies to match the data model
+  if (therapy.is_received) {
+    // Add to therapies array if not already present
+    if (!formData.therapies?.some((t) => t.type === therapyType)) {
+      formData.therapies = [...(formData.therapies || []), { ...therapy }]
+    }
+  } else {
+    // Remove from therapies array
+    formData.therapies = formData.therapies?.filter((t) => t.type !== therapyType) || []
+
+    // Reset details when unchecking
+    therapyDetails.value[therapyType] = {
+      type: therapyType,
+      is_received: false,
+      therapy_center: '',
+      therapist_name: '',
+      therapist_contact_number: '',
+      therapist_email: '',
+    }
+  }
+}
+
+function updateTherapyDetails(therapyType: TherapyType, field: keyof Therapy, value: string) {
+  const therapy = therapyDetails.value[therapyType]
+  therapy[field] = value
+
+  // Also update in formData if therapy is selected
+  if (therapy.is_received) {
+    const index = formData.therapies?.findIndex((t) => t.type === therapyType) ?? -1
+    if (index > -1 && formData.therapies) {
+      formData.therapies[index] = { ...therapy }
+    }
+  }
+}
+
+// Initialize formData therapies if not present
+if (!formData.therapies) {
+  formData.therapies = []
+}
 </script>
 
 <template>
   <Card class="border-0 shadow-none">
     <CardHeader>
-      <CardTitle class="text-center text-2xl font-bold text-primary"
-        >Child Information Form</CardTitle
-      >
+      <CardTitle class="text-center text-2xl font-bold text-primary">
+        Child Information Form
+      </CardTitle>
     </CardHeader>
     <CardContent>
       <form @submit.prevent="submitForm" class="space-y-6">
@@ -180,24 +272,89 @@ const { isLoading } = useAuth()
           </div>
         </div>
 
-        <div class="space-y-2">
-          <Label>Therapy Services</Label>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-            <div class="flex items-center space-x-2">
-              <Checkbox id="occupational_therapy" v-model="formData.occupational_therapy" />
-              <Label for="occupational_therapy">Occupational Therapy</Label>
-            </div>
-            <div class="flex items-center space-x-2">
-              <Checkbox id="physical_therapy" v-model="formData.physical_therapy" />
-              <Label for="physical_therapy">Physical Therapy</Label>
-            </div>
-            <div class="flex items-center space-x-2">
-              <Checkbox id="behavioral_therapy" v-model="formData.behavioral_therapy" />
-              <Label for="behavioral_therapy">Behavioral Therapy</Label>
-            </div>
-            <div class="flex items-center space-x-2">
-              <Checkbox id="speech_therapy" v-model="formData.speech_therapy" />
-              <Label for="speech_therapy">Speech Therapy</Label>
+        <div class="space-y-4">
+          <Label class="text-lg font-semibold">Therapy Services</Label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div
+              v-for="therapy in therapyList"
+              :key="therapy.type"
+              class="flex flex-col space-y-3 p-4 border rounded-lg bg-gray-50"
+            >
+              <div class="flex items-center space-x-3">
+                <Checkbox
+                  :id="`therapy-${therapy.type}`"
+                  :checked="therapy.details.is_received"
+                  @click="toggleTherapy(therapy.type)"
+                />
+                <Label
+                  :for="`therapy-${therapy.type}`"
+                  class="font-medium text-base cursor-pointer"
+                >
+                  {{ therapy.label }}
+                </Label>
+              </div>
+
+              <div
+                v-if="therapy.details.is_received"
+                class="ml-8 space-y-3 transition-all duration-200"
+              >
+                <Input
+                  type="text"
+                  placeholder="Therapy center"
+                  :value="therapy.details.therapy_center"
+                  @input="
+                    (e) =>
+                      updateTherapyDetails(
+                        therapy.type,
+                        'therapy_center',
+                        (e.target as HTMLInputElement).value,
+                      )
+                  "
+                  class="w-full"
+                />
+                <Input
+                  type="text"
+                  placeholder="Therapist name"
+                  :value="therapy.details.therapist_name"
+                  @input="
+                    (e) =>
+                      updateTherapyDetails(
+                        therapy.type,
+                        'therapist_name',
+                        (e.target as HTMLInputElement).value,
+                      )
+                  "
+                  class="w-full"
+                />
+                <Input
+                  type="tel"
+                  placeholder="Therapist contact number"
+                  :value="therapy.details.therapist_contact_number"
+                  @input="
+                    (e) =>
+                      updateTherapyDetails(
+                        therapy.type,
+                        'therapist_contact_number',
+                        (e.target as HTMLInputElement).value,
+                      )
+                  "
+                  class="w-full"
+                />
+                <Input
+                  type="email"
+                  placeholder="Therapist email"
+                  :value="therapy.details.therapist_email"
+                  @input="
+                    (e) =>
+                      updateTherapyDetails(
+                        therapy.type,
+                        'therapist_email',
+                        (e.target as HTMLInputElement).value,
+                      )
+                  "
+                  class="w-full"
+                />
+              </div>
             </div>
           </div>
         </div>
