@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import DataTableToolbar from './DataTableToolbar.vue'
+
 import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
@@ -76,8 +76,6 @@ watch(
 
 <template>
   <div class="space-y-4">
-    <DataTableToolbar :table="table" @refresh="emit('refresh')" />
-
     <div class="rounded-md border">
       <Table>
         <TableHeader>

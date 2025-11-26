@@ -19,12 +19,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import DataTableToolbar from './DataTableToolbar.vue'
 import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
   data: User[]
   isLoading?: boolean
+  onDelete: (id: number) => void
 }>()
 
 const emit = defineEmits(['refresh'])
@@ -35,12 +35,14 @@ const rowSelection = ref({})
 const columnVisibility = ref({})
 
 const tableData = computed(() => props.data || [])
-
+const tableColumns = computed(() => columns(props.onDelete))
 const table = useVueTable({
   get data() {
     return tableData.value
   },
-  columns,
+  get columns() {
+    return tableColumns.value
+  },
   getCoreRowModel: getCoreRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
@@ -76,8 +78,6 @@ watch(
 
 <template>
   <div class="space-y-4">
-    <DataTableToolbar :table="table" @refresh="emit('refresh')" />
-
     <div class="rounded-md border">
       <Table>
         <TableHeader>

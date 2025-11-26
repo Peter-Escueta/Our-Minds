@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { h, computed } from 'vue'
-import type { Child } from '@/types/child'
+import type { Child, Assessment } from '@/types/child'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,7 +38,11 @@ const handleAssess = () => {
 }
 
 const handleEvaluate = () => {
-  router.push(`/assessments/${props.child.id}/evaluate`)
+  // Navigate to evaluation creation for the first assessment
+  const firstAssessment = props.child.assessments?.[0]
+  if (firstAssessment) {
+    router.push(`/assessments/${firstAssessment.id}/evaluate`)
+  }
 }
 
 const hasAssessments = computed(() => {
@@ -55,6 +59,37 @@ const hasEvaluations = computed(() => {
       (assessment.evaluations_count ?? 0) > 0 ||
       (assessment.evaluations && assessment.evaluations.length > 0),
   )
+})
+
+// Get the latest evaluation for view navigation
+const getLatestEvaluation = computed(() => {
+  if (!props.child.assessments) return null
+
+  // Find the first assessment that has evaluations
+  const assessmentWithEvaluation = props.child.assessments.find(
+    (assessment) => assessment.evaluations && assessment.evaluations.length > 0,
+  )
+
+  if (assessmentWithEvaluation && assessmentWithEvaluation.evaluations) {
+    return assessmentWithEvaluation.evaluations[0] // Return first evaluation
+  }
+
+  return null
+})
+
+// Get all evaluations for view all page
+const getAllEvaluationsPath = computed(() => {
+  return `/evaluations/${props.child.id}`
+})
+
+// Check if user can create evaluation (has assessments but no evaluations)
+const canCreateEvaluation = computed(() => {
+  return hasAssessments.value && !hasEvaluations.value
+})
+
+// Check if user can view evaluations
+const canViewEvaluations = computed(() => {
+  return hasEvaluations.value
 })
 </script>
 
@@ -81,24 +116,25 @@ const hasEvaluations = computed(() => {
       </template>
 
       <!-- Consultant Actions -->
-      <template v-if="userRole === 'consultant'">
-        <DropdownMenuItem
-          v-if="hasAssessments && !hasEvaluations"
-          @click="handleEvaluate"
-          class="text-primary font-medium"
-        >
-          Create Evaluation
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          v-if="hasEvaluations"
-          @click="() => router.push(`/evaluations/${props.child.id}`)"
-        >
-          View Evaluations
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <ConsentButton :childId="props.child.id" class="w-full text-left"></ConsentButton>
-        </DropdownMenuItem>
-      </template>
+      <DropdownMenuItem
+        v-if="canCreateEvaluation"
+        @click="handleEvaluate"
+        class="text-primary font-medium"
+      >
+        Create Evaluation
+      </DropdownMenuItem>
+
+      <!-- View specific evaluation if available -->
+      <DropdownMenuItem
+        v-if="getLatestEvaluation"
+        @click="() => router.push(`/evaluations/${getLatestEvaluation.id}`)"
+      >
+        View Latest Evaluation
+      </DropdownMenuItem>
+
+      <DropdownMenuItem>
+        <ConsentButton :childId="props.child.id" class="w-full text-left" />
+      </DropdownMenuItem>
 
       <DropdownMenuItem class="text-destructive" @click="handleDelete"> Delete </DropdownMenuItem>
     </DropdownMenuContent>
