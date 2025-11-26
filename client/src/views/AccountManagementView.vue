@@ -13,13 +13,25 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { useApi } from '@/composables/useApi'
 import { Label } from '@/components/ui/label'
 const email = ref('')
 const password = ref('')
+const role = ref('')
+const name = ref('')
 const isCreatingAccount = ref(false)
 const { api, handleApiError } = useApi()
+
 const handleAccountCreation = async () => {
   if (!email.value || !password.value) {
     handleApiError(new Error('Please fill in all fields'), 'Missing required fields')
@@ -31,19 +43,25 @@ const handleAccountCreation = async () => {
     const response = await api.post('/users', {
       email: email.value,
       password: password.value,
+      role: role.value,
+      name: name.value,
     })
-
-    console.log('Account created successfully:', response.data)
 
     email.value = ''
     password.value = ''
-
+    role.value = ''
+    name.value = ''
     await fetchUsers()
   } catch (error) {
     console.error('Error creating account:', error)
   } finally {
     isCreatingAccount.value = false
   }
+}
+async function handleDelete(userId: number) {
+  const response = await api.delete('/users/' + userId)
+  const deletedId = response.data.id
+  users.value = users.value.filter((u) => u.id !== deletedId)
 }
 
 const { fetchUsers, users: fetchedUsers, isLoading: usersLoading } = useUserTable()
@@ -80,6 +98,10 @@ watch(usersLoading, (loading) => {
           </DialogHeader>
           <div class="grid gap-4 py-4">
             <div class="grid grid-cols-4 items-center gap-4">
+              <Label for="name" class="text-right"> Name </Label>
+              <Input id="name" placeholder="John Doe" class="col-span-3" v-model="name" />
+            </div>
+            <div class="grid grid-cols-4 items-center gap-4">
               <Label for="email" class="text-right"> Email </Label>
               <Input
                 id="email"
@@ -98,6 +120,21 @@ watch(usersLoading, (loading) => {
                 v-model="password"
               />
             </div>
+            <div class="grid grid-cols-4 items-center gap-4">
+              <Label for="role">Role</Label>
+              <Select v-model="role">
+                <SelectTrigger class="w-[180px]">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Role</SelectLabel>
+                    <SelectItem value="assessor"> Assessor </SelectItem>
+                    <SelectItem value="consultant"> Consultant </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button @click="handleAccountCreation"> Create Account </Button>
@@ -106,6 +143,12 @@ watch(usersLoading, (loading) => {
       </Dialog>
     </div>
 
-    <UserDataTable :data="users" :isLoading="isLoading" @refresh="fetchUsers" class="flex-1" />
+    <UserDataTable
+      :data="users"
+      :onDelete="handleDelete"
+      :isLoading="isLoading"
+      @refresh="fetchUsers"
+      class="flex-1"
+    />
   </div>
 </template>
