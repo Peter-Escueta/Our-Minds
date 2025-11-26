@@ -1,5 +1,6 @@
 <?php
 
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -62,13 +63,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Skill Categories with question counts
     Route::get('/skill-categories', [SkillCategoryController::class, 'index']);
     Route::get('/skill-categories/{category}', [SkillCategoryController::class, 'show']);
+    Route::post('/skill-categories', [SkillCategoryController::class, 'store']);
+    Route::delete('/skill-categories/{category}', [SkillCategoryController::class, 'destroy']);
 
     // Additional question endpoints
     Route::get('/questions/categories', [QuestionController::class, 'categoriesWithQuestions']);
     Route::get('/questions/category/{category}/age/{age}', [QuestionController::class, 'byCategoryAndAge']);
 
     // Reports
-    Route::prefix('reports')->group(function () {
+    Route::prefix('reports')->group(callback: function () {
         Route::get('/children/{child}', [ReportController::class, 'childReport']);
         Route::get('/children/{child}/timeline', [ReportController::class, 'childTimeline']);
         Route::get('/assessments/{assessment}/full', [ReportController::class, 'fullAssessment']);
@@ -80,10 +83,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Evaluation routes
     Route::get('evaluations/{evaluation}', [AssessmentEvaluationController::class, 'show']);
     Route::get('evaluations/{evaluation}/pdf', [AssessmentEvaluationController::class, 'generateEvaluation']);
-
     //User routes
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
+    Route::delete('users/{user}', [UserController::class, 'destroy']);
 
     // Dashboard
     Route::prefix('dashboard')->group(function () {
