@@ -8,7 +8,7 @@ import type { Question, SkillCategory } from '@/types'
 export function useChecklist() {
   const categories = ref<SkillCategory[]>([])
   const questions = ref<Question[]>([])
-  const availableAges = Array.from({ length: 12 }, (_, i) => i + 1)
+  const availableAges = Array.from({ length: 21 }, (_, i) => i + 1)
   const selectedCategory = ref<number | null>(null)
   const selectedAge = ref<number>(1)
   const newQuestionText = ref('')
