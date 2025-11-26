@@ -11,16 +11,7 @@ class ChildController extends Controller
 {
     public function index()
     {
-        $children = Child::withCount([
-            'assessments',
-        ])
-            ->with(['assessments' => function ($query) {
-                $query->withCount('evaluations')
-                    ->latest('assessment_date');
-            }])
-            ->orderBy('surname')
-            ->get();
-
+        $children = Child::with('assessments.evaluations')->orderBy('created_at', 'desc')->paginate(10);
         return response()->json($children);
     }
 
