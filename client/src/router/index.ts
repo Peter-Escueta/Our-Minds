@@ -37,7 +37,7 @@ const router = createRouter({
       path: '/children/create',
       name: 'screening',
       component: ConsentFormView,
-      meta: { requiresAuth: true, allowedRoles: ['consultant'] as UserRole[] }
+      meta: { requiresAuth: true, allowedRoles: ['consultant', 'assessor'] as UserRole[] }
     },
      {
       path: '/children',
