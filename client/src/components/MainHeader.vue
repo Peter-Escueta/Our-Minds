@@ -31,37 +31,36 @@ const { navigateTo } = useNavigation()
           <div class="text-sm text-secondary">Child Development Assessment System</div>
         </div>
 
-        <!-- Navigation Links (Conditional by Role) -->
         <nav class="hidden md:flex space-x-6">
-          <!-- Consultant-Only Links -->
           <template v-if="userRole === 'consultant'">
-            <button
+            <RouterLink
               class="text-sm font-medium hover:text-primary transition-colors"
-              @click="navigateTo('edit-checklist')"
+              to="/edit-checklist"
             >
               Edit Checklist
-            </button>
-            <button
+            </RouterLink>
+
+            <RouterLink
               class="text-sm font-medium hover:text-primary transition-colors"
-              @click="navigateTo('screening')"
-            >
-              New Screening
-            </button>
-            <button
-              class="text-sm font-medium hover:text-primary transition-colors"
-              @click="navigateTo('account-management')"
+              to="/account-management"
             >
               Account Management
-            </button>
+            </RouterLink>
           </template>
 
           <!-- Common Link (Both Roles) -->
-          <button
+          <RouterLink
             class="text-sm font-medium hover:text-primary transition-colors"
-            @click="navigateTo('children')"
+            to="/children/create"
+          >
+            New Screening
+          </RouterLink>
+          <RouterLink
+            class="text-sm font-medium hover:text-primary transition-colors"
+            to="/children"
           >
             Child List
-          </button>
+          </RouterLink>
         </nav>
       </div>
 
