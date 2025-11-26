@@ -24,7 +24,6 @@ class SkillCategoryController extends Controller
                 'data' => $categories,
                 'message' => 'Categories retrieved successfully'
             ]);
-
         } catch (\Exception $e) {
             Log::error('SkillCategoryController@index error: ' . $e->getMessage());
             return response()->json([
@@ -34,12 +33,19 @@ class SkillCategoryController extends Controller
         }
     }
 
+
     /**
      * Store a newly created skill category
      */
     public function store(Request $request)
     {
         try {
+            $slug = $this->nameToSlug($request->input('name'));
+            $color = $this->convertToTailwindClass($request->input('color'));
+            $request->merge([
+                'slug' => $slug,
+                'color' => $color
+            ]);
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'slug' => [
@@ -58,7 +64,6 @@ class SkillCategoryController extends Controller
                 'data' => $category,
                 'message' => 'Category created successfully'
             ], 201);
-
         } catch (\Exception $e) {
             Log::error('SkillCategoryController@store error: ' . $e->getMessage());
             return response()->json([
@@ -67,6 +72,16 @@ class SkillCategoryController extends Controller
             ], 500);
         }
     }
+    public function convertToTailwindClass(string $color)
+    {
+        return 'text-' . $color . '-700';
+    }
+
+    public function nameToSlug(string $category)
+    {
+        return strtolower(str_replace(' ', '-', $category));
+    }
+
 
     /**
      * Display the specified skill category with questions
@@ -75,12 +90,11 @@ class SkillCategoryController extends Controller
     {
         try {
             return response()->json([
-                'data' => $skillCategory->load(['questions' => function($query) {
+                'data' => $skillCategory->load(['questions' => function ($query) {
                     $query->orderBy('age')->orderBy('created_at');
                 }]),
                 'message' => 'Category retrieved successfully'
             ]);
-
         } catch (\Exception $e) {
             Log::error('SkillCategoryController@show error: ' . $e->getMessage());
             return response()->json([
@@ -114,7 +128,6 @@ class SkillCategoryController extends Controller
                 'data' => $skillCategory,
                 'message' => 'Category updated successfully'
             ]);
-
         } catch (\Exception $e) {
             Log::error('SkillCategoryController@update error: ' . $e->getMessage());
             return response()->json([
@@ -127,22 +140,20 @@ class SkillCategoryController extends Controller
     /**
      * Remove the specified skill category
      */
-    public function destroy(SkillCategory $skillCategory)
+    public function destroy(SkillCategory $category)
     {
         try {
-            // Prevent deletion if category has questions
-            if ($skillCategory->questions()->exists()) {
+            if ($category->questions()->exists()) {
                 return response()->json([
                     'message' => 'Cannot delete category with associated questions'
                 ], 422);
             }
 
-            $skillCategory->delete();
+            $category->delete();
 
             return response()->json([
-                'message' => 'Category deleted successfully'
-            ], 204);
-
+                'category' => $category
+            ], 200);
         } catch (\Exception $e) {
             Log::error('SkillCategoryController@destroy error: ' . $e->getMessage());
             return response()->json([
