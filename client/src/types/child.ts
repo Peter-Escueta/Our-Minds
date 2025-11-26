@@ -25,10 +25,6 @@ export interface Child {
   referring_doctor?: string
   last_assessment_date?: string
   follow_up_date?: string
-  occupational_therapy: boolean
-  physical_therapy: boolean
-  behavioral_therapy: boolean
-  speech_therapy: boolean
   school?: string
   grade?: string
   placement?: string
@@ -38,7 +34,29 @@ export interface Child {
   updated_at?: string
   reason?: string
   assessments?: Assessment[]
+  therapies?: Therapy[]
 }
+export interface Therapy {
+  type: TherapyType
+  is_received: boolean
+  therapy_center?: string
+  therapist_name?: string
+  therapist_contact_number?: string
+  therapist_email?: string
+
+}
+export enum TherapyType {
+  OCCUPATIONAL = 'occupational_therapy',
+  PHYSICAL = 'physical_therapy',
+  BEHAVIORAL = 'behavioral_therapy',
+  SPEECH = 'speech_therapy',
+}
+export const TherapyTypeLabels: Record<TherapyType, string> = {
+  [TherapyType.OCCUPATIONAL]: 'Occupational Therapy',
+    [TherapyType.PHYSICAL]: 'Phyiscal Therapy',
+    [TherapyType.BEHAVIORAL]: 'Behavioral Therapy',
+  [TherapyType.SPEECH]: 'Speech Therapy',
+  }
 export interface Assessment {
   id: string
   child_id: string
