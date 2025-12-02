@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EvaluationStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,11 +14,14 @@ class AssessmentEvaluation extends Model
         'assessment_id',
         'background_information',
         'recommendations',
-        'summary_notes'
+        'websites',
+        'status'
     ];
 
     protected $casts = [
         'recommendations' => 'array',
+        'websites' => 'array',
+        'status' => EvaluationStatus::class,
     ];
 
     public function assessment()
