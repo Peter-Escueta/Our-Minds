@@ -89,9 +89,14 @@
         </section>
 
         <section>
-          <h2 class="text-xl font-semibold mb-4">Evaluation Summary</h2>
-          <div class="bg-gray-50 p-4 rounded-lg">
-            <p class="whitespace-pre-line">{{ evaluation.summary_notes }}</p>
+          <h2 class="text-xl font-semibold mb-4">Websites</h2>
+          <div
+            v-for="(website, index) in evaluation.websites"
+            :key="index"
+            class="flex items-start gap-3"
+          >
+            <span class="flex-shrink-0 mt-1 h-2 w-2 rounded-full bg-primary" />
+            <p class="flex-1">{{ website }}</p>
           </div>
         </section>
       </CardContent>
@@ -114,12 +119,12 @@ const evaluationId = route.params.id
 const API_EVALUATION_ENDPOINT = import.meta.env.VITE_API_EVALUATION_ENDPOINT
 const { api, handleApiError } = useApi()
 
-const evaluation = ref<Evaluation>({
+const evaluation = ref<Partial<Evaluation>>({
   id: '',
   created_at: '',
   background_information: '',
   recommendations: [],
-  summary_notes: '',
+  websites: [],
   assessment: {
     child_name: '',
     categories: [],

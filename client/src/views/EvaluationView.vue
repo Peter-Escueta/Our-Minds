@@ -15,7 +15,8 @@
 
       <CardContent class="space-y-8">
         <!-- Background Information Section -->
-        <section>
+
+        <section v-if="!isConsultant">
           <h2 class="text-xl font-semibold mb-4">Background Information</h2>
           <div class="space-y-4">
             <div>
@@ -28,144 +29,191 @@
             </div>
           </div>
         </section>
-
-        <!-- Developmental Areas Section -->
-        <section>
-          <h2 class="text-xl font-semibold mb-4">Developmental Areas</h2>
-          <div class="space-y-6">
-            <!-- Group categories by name to avoid duplication -->
-            <Card
-              v-for="categoryGroup in getGroupedCategories"
-              :key="categoryGroup.name"
-              class="p-6"
-            >
-              <CardHeader class="p-0 pb-4">
-                <div class="flex justify-between items-start">
-                  <CardTitle class="text-xl font-semibold text-primary">
-                    {{ categoryGroup.name.toUpperCase() }}
-                  </CardTitle>
-                  <div class="flex gap-2">
-                    <Badge v-for="age in categoryGroup.ages" :key="age" variant="outline">
-                      Age {{ age }}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent class="p-0 mt-4">
-                <!-- Show results for each age within this category -->
-                <div
-                  v-for="ageData in categoryGroup.ageResults"
-                  :key="ageData.age"
-                  class="mb-6 last:mb-0 p-4 bg-muted/50 rounded-lg"
-                >
-                  <div class="flex items-center gap-2 mb-3">
-                    <h4 class="font-semibold text-lg">Age {{ ageData.age }}</h4>
-                    <Badge variant="secondary">
-                      {{ ageData.responses.length }} skills assessed
-                    </Badge>
-                  </div>
-
-                  <ul class="space-y-2">
-                    <li
-                      v-for="(response, index) in ageData.responses"
-                      :key="index"
-                      class="flex items-start"
-                    >
-                      <span
-                        class="mr-2 mt-1 h-2 w-2 rounded-full"
-                        :class="getResponseColor(response)"
-                      />
-                      <span>{{ response }}</span>
-                    </li>
-                  </ul>
-
-                  <p class="mt-3 text-sm text-muted-foreground italic">
-                    {{ ageData.competency }}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        <!-- Recommendations Section -->
-        <section>
-          <h2 class="text-xl font-semibold mb-4">Recommendations</h2>
-
-          <!-- Recommendation Selection -->
-          <div class="space-y-4 mb-6">
-            <div>
-              <Label>Select Standard Recommendations</Label>
-              <Select v-model="selectedRecommendations" multiple>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select recommendations..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem
-                      v-for="(rec, index) in standardRecommendations"
-                      :key="index"
-                      :value="rec"
-                    >
-                      {{ rec }}
-                    </SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button type="button" variant="outline" size="sm" @click="addSelectedRecommendations">
-              <PlusCircle class="w-4 h-4 mr-2" />
-              Add Selected
-            </Button>
-          </div>
-
-          <!-- Custom Recommendations -->
-          <div class="space-y-4">
-            <div
-              v-for="(rec, index) in evaluation.recommendations"
-              :key="index"
-              class="flex items-start gap-2"
-            >
-              <Textarea
-                v-model="evaluation.recommendations[index]"
-                placeholder="Enter recommendation..."
-                class="flex-1"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                @click="removeRecommendation(index)"
+        <div v-else>
+          <!-- Developmental Areas Section -->
+          <section>
+            <h2 class="text-xl font-semibold mb-4">Developmental Areas</h2>
+            <div class="space-y-6">
+              <Card
+                v-for="categoryGroup in getGroupedCategories"
+                :key="categoryGroup.name"
+                class="p-6"
               >
-                <Trash2 class="w-4 h-4 text-destructive" />
+                <CardHeader class="p-0 pb-4">
+                  <div class="flex justify-between items-start">
+                    <CardTitle class="text-xl font-semibold text-primary">
+                      {{ categoryGroup.name.toUpperCase() }}
+                    </CardTitle>
+                    <div class="flex gap-2">
+                      <Badge v-for="age in categoryGroup.ages" :key="age" variant="outline">
+                        Age {{ age }}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent class="p-0 mt-4">
+                  <div
+                    v-for="ageData in categoryGroup.ageResults"
+                    :key="ageData.age"
+                    class="mb-6 last:mb-0 p-4 bg-muted/50 rounded-lg"
+                  >
+                    <div class="flex items-center gap-2 mb-3">
+                      <h4 class="font-semibold text-lg">Age {{ ageData.age }}</h4>
+                      <Badge variant="secondary">
+                        {{ ageData.responses.length }} skills assessed
+                      </Badge>
+                    </div>
+
+                    <ul class="space-y-2">
+                      <li
+                        v-for="(response, index) in ageData.responses"
+                        :key="index"
+                        class="flex items-start"
+                      >
+                        <span
+                          class="mr-2 mt-1 h-2 w-2 rounded-full"
+                          :class="getResponseColor(response)"
+                        />
+                        <span>{{ response }}</span>
+                      </li>
+                    </ul>
+
+                    <p class="mt-3 text-sm text-muted-foreground italic">
+                      {{ ageData.competency }}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+
+          <!-- Recommendations Section -->
+          <section>
+            <h2 class="text-xl font-semibold my-4">Recommendations</h2>
+
+            <!-- Recommendation Selection -->
+            <div class="space-y-4 mb-6">
+              <div>
+                <Label class="mb-4">Select Standard Recommendations</Label>
+                <Select v-model="selectedRecommendations" multiple>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select recommendations..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem
+                        v-for="(rec, index) in standardRecommendations"
+                        :key="index"
+                        :value="rec"
+                      >
+                        {{ rec }}
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button type="button" variant="outline" size="sm" @click="addSelectedRecommendations">
+                <PlusCircle class="w-4 h-4 mr-2" />
+                Add Selected
               </Button>
             </div>
 
-            <Button type="button" variant="outline" @click="addRecommendation">
-              <PlusCircle class="w-4 h-4 mr-2" />
-              Add Custom Recommendation
-            </Button>
-          </div>
-        </section>
+            <!-- Custom Recommendations -->
+            <div class="space-y-4">
+              <div
+                v-for="(rec, index) in evaluation.recommendations"
+                :key="index"
+                class="flex items-start gap-2"
+              >
+                <Textarea
+                  v-model="evaluation.recommendations[index]"
+                  placeholder="Enter recommendation..."
+                  class="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  @click="removeRecommendation(index)"
+                >
+                  <Trash2 class="w-4 h-4 text-destructive" />
+                </Button>
+              </div>
 
-        <!-- Evaluation Summary -->
-        <section>
-          <Label for="summary-notes">Evaluation Summary</Label>
-          <Textarea
-            id="summary-notes"
-            v-model="evaluation.summary_notes"
-            placeholder="Enter your professional evaluation summary..."
-            class="min-h-[200px]"
-          />
-        </section>
+              <Button type="button" variant="outline" @click="addRecommendation">
+                <PlusCircle class="w-4 h-4 mr-2" />
+                Add Custom Recommendation
+              </Button>
+            </div>
+          </section>
+          <section>
+            <h2 class="text-xl font-semibold my-4">Websites</h2>
 
+            <!-- Recommendation Selection -->
+            <div class="space-y-4 mb-6">
+              <div>
+                <Label class="mb-4">Select Standard Websites</Label>
+                <Select v-model="selectedWebsites" multiple>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select websites..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem
+                        v-for="(site, index) in standardEvaluationWebsites"
+                        :key="index"
+                        :value="site"
+                      >
+                        {{ site }}
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button type="button" variant="outline" size="sm" @click="addSelectedWebsites">
+                <PlusCircle class="w-4 h-4 mr-2" />
+                Add Selected
+              </Button>
+            </div>
+
+            <!-- Custom Websites -->
+            <div class="space-y-4">
+              <div
+                v-for="(site, index) in evaluation.websites"
+                :key="index"
+                class="flex items-start gap-2"
+              >
+                <Textarea
+                  v-model="evaluation.websites[index]"
+                  placeholder="Enter recommendation..."
+                  class="flex-1"
+                />
+                <Button type="button" variant="ghost" size="icon" @click="removeWebsite(index)">
+                  <Trash2 class="w-4 h-4 text-destructive" />
+                </Button>
+              </div>
+
+              <Button type="button" variant="outline" @click="addWebsite">
+                <PlusCircle class="w-4 h-4 mr-2" />
+                Add Custom Recommendation
+              </Button>
+            </div>
+          </section>
+        </div>
         <!-- Action Buttons -->
         <div class="flex justify-end gap-4 pt-4">
           <Button variant="outline" @click="resetForm">Reset</Button>
           <Button @click="handleSubmitEvaluation" :disabled="isLoading">
-            {{ isLoading ? 'Submitting...' : 'Submit Evaluation' }}
+            {{
+              isLoading
+                ? 'Submitting...'
+                : isConsultant
+                  ? 'Finalize Evaluation'
+                  : 'Submit Background Info'
+            }}
           </Button>
         </div>
       </CardContent>
@@ -194,7 +242,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -214,19 +262,48 @@ import type { Evaluation } from '@/types'
 import { formatDate } from '@/utils/date'
 import { useEvaluationForm } from '@/composables/useEvaluationForm'
 import { standardRecommendations } from '@/data/evaluationRecommendations'
+import { standardEvaluationWebsites } from '@/data/evaluationWebsites'
 import { toast } from 'vue-sonner'
+import { useAuth } from '@/composables/useAuth'
+import router from '@/router'
 
+const { isConsultant } = useAuth()
 const route = useRoute()
 const assessmentId = route.params.id as string
 
-const { assessment, isLoading, fetchAssessment, submitEvaluation } = useEvaluationForm()
+const { assessment, isLoading, fetchAssessment, submitEvaluation, submitBackground } =
+  useEvaluationForm()
+
 const evaluation = ref<Evaluation>({
   background_information: '',
   recommendations: [],
+  websites: [],
   summary_notes: '',
 })
 
+watch(
+  assessment,
+  (newAssessment) => {
+    if (newAssessment && newAssessment.evaluations && newAssessment.evaluations.length > 0) {
+      const existingEval = newAssessment.evaluations[0]
+
+      if (existingEval) {
+        evaluation.value.background_information = existingEval.background_information || ''
+
+        if (existingEval.recommendations && existingEval.recommendations.length > 0) {
+          evaluation.value.recommendations = [...existingEval.recommendations]
+        }
+        if (existingEval.websites && existingEval.websites.length > 0) {
+          evaluation.value.websites = [...existingEval.websites]
+        }
+      }
+    }
+  },
+  { immediate: true },
+)
+
 const selectedRecommendations = ref<string[]>([])
+const selectedWebsites = ref<string[]>([])
 
 const getGroupedCategories = computed(() => {
   if (!assessment.value?.categories) return []
@@ -275,9 +352,15 @@ const getResponseColor = (response: string) => {
 const addRecommendation = () => {
   evaluation.value.recommendations.push('')
 }
+const addWebsite = () => {
+  evaluation.value.websites.push('')
+}
 
 const removeRecommendation = (index: number) => {
   evaluation.value.recommendations.splice(index, 1)
+}
+const removeWebsite = (index: number) => {
+  evaluation.value.websites.splice(index, 1)
 }
 
 const addSelectedRecommendations = () => {
@@ -288,33 +371,48 @@ const addSelectedRecommendations = () => {
   })
   selectedRecommendations.value = []
 }
+const addSelectedWebsites = () => {
+  selectedWebsites.value.forEach((site) => {
+    if (!evaluation.value.websites.includes(site)) {
+      evaluation.value.websites.push(site)
+    }
+  })
+  selectedWebsites.value = []
+}
 
 const resetForm = () => {
   evaluation.value = {
     background_information: '',
     recommendations: [],
+    websites: [],
     summary_notes: '',
   }
 }
 
 const handleSubmitEvaluation = async () => {
   try {
+    if (!isConsultant.value) {
+      if (!evaluation.value.background_information.trim()) {
+        toast.error('Please provide background information')
+        return
+      }
+
+      const success = await submitBackground({
+        background_information: evaluation.value.background_information,
+      })
+
+      if (success) {
+        toast.success('Background information saved')
+      }
+      return
+    }
+
     const filteredRecommendations = evaluation.value.recommendations.filter(
       (rec) => rec.trim() !== '',
     )
 
     if (filteredRecommendations.length === 0) {
       toast.error('Please add at least one recommendation')
-      return
-    }
-
-    if (!evaluation.value.background_information.trim()) {
-      toast.error('Please provide background information')
-      return
-    }
-
-    if (!evaluation.value.summary_notes.trim()) {
-      toast.error('Please provide an evaluation summary')
       return
     }
 
@@ -325,7 +423,7 @@ const handleSubmitEvaluation = async () => {
 
     if (success) {
       toast.success('Evaluation submitted successfully!')
-      resetForm()
+      router.push('/children')
     }
   } catch (error) {
     toast.error('Failed to submit evaluation')
