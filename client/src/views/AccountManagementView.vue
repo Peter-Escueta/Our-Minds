@@ -87,7 +87,7 @@ watch(usersLoading, (loading) => {
       <h1 class="text-2xl font-bold">Account Management</h1>
       <Dialog>
         <DialogTrigger as-child>
-          <Button variant="outline"> Create Account </Button>
+          <Button variant="outline" class="cursor-pointer"> Create Account </Button>
         </DialogTrigger>
         <DialogContent class="sm:max-w-[425px]">
           <DialogHeader>
