@@ -70,6 +70,7 @@ export interface Evaluation {
   id: string
   assessment_id: string
   created_at?: string
+  status?: string
   updated_at?: string
 }
 
