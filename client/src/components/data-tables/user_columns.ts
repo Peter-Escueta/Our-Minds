@@ -31,7 +31,7 @@ export const columns = (onDelete: (id: number) => void) => [
     header: 'Created At',
     cell: ({ row }) => {
       try {
-        // Use row.original to access the actual data
+
         const createdAt = row.original.created_at
         if (!createdAt) return 'N/A'
 
@@ -72,8 +72,8 @@ export const columns = (onDelete: (id: number) => void) => [
         h('div', { class: 'flex gap-2' }, [
           h(Button, {
             variant: 'destructive',
-            class: 'w-fit',
-            onClick: () => onDelete(user.id), // Use user.id directly
+            class: 'w-fit cursor-pointer',
+            onClick: () => onDelete(user.id),
           }, () => 'Delete User'),
         ]),
       ])

@@ -63,6 +63,9 @@ const table = useVueTable({
       return columnVisibility.value
     },
   },
+  meta: {
+    handleDelete: (id: number) => emit('delete', id),
+  },
 })
 
 watch(

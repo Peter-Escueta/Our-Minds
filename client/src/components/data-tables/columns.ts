@@ -1,7 +1,7 @@
 import { createColumnHelper } from '@tanstack/vue-table'
 import { h } from 'vue'
 import { Button } from '@/components/ui/button/index'
-import { ArrowUpDown, MoreHorizontal } from 'lucide-vue-next'
+import { ArrowUpDown } from 'lucide-vue-next'
 import DropdownAction from './DataTableActions.vue'
 import { Badge } from '@/components/ui/badge'
 import { format, differenceInYears, parseISO } from 'date-fns'
@@ -84,17 +84,32 @@ export const columns = [
     }
   }),
 
-  columnHelper.accessor('assessments_count', {
+  columnHelper.accessor('assessments', {
+    id: 'status',
     header: 'Assessments/Evaluations',
     cell: ({ row }) => {
-      const assessmentsCount = row.getValue('assessments_count') || 0
       const assessments = row.original.assessments || []
+      const hasAssessments = assessments.length > 0
 
-      const evaluationsCount = assessments.reduce((total, assessment) => {
-        return total + (assessment.evaluations_count || (assessment.evaluations ? assessment.evaluations.length : 0))
-      }, 0)
+      const allEvaluations = assessments.flatMap(
+        (assessment) => assessment.evaluations || []
+      )
 
-      const latestAssessment = assessments.length > 0
+      const totalEvaluations = allEvaluations.length
+      const hasEvaluations = totalEvaluations > 0
+
+      const hasBackground = allEvaluations.some(
+        (evaluation) => evaluation.status === 'ready_for_evaluation'
+      )
+
+      const hasCompletedEvaluations = allEvaluations.some(
+        (evaluation) =>
+          evaluation.status === 'complete' ||
+          evaluation.status === 'finished' ||
+          evaluation.status === 'submitted'
+      )
+
+      const latestAssessment = hasAssessments
         ? assessments.reduce((latest, current) =>
             new Date(current.assessment_date) > new Date(latest.assessment_date) ? current : latest
           )
@@ -103,24 +118,46 @@ export const columns = [
       return h('div', { class: 'flex flex-col gap-1' }, [
         h('div', { class: 'flex gap-2' }, [
           h(Badge, {
-            variant: assessmentsCount > 0 ? 'default' : 'secondary',
+            variant: hasAssessments ? 'default' : 'secondary',
             class: 'w-fit'
-          }, () => assessmentsCount > 0  ? 'Assessment Complete' : 'No Assessment'),
+          }, () => hasAssessments ? 'Assessment Created' : 'No Assessment'),
+
           h(Badge, {
-            variant: evaluationsCount > 0 ? 'default' : 'secondary',
+            variant: hasCompletedEvaluations ? 'default' :
+                    hasBackground ? 'warning' :
+                    hasEvaluations ? 'outline' : 'secondary',
             class: 'w-fit'
-          }, () => evaluationsCount > 0 ? 'Evaluation Complete' : 'No Evaluation')
+          }, () => {
+            if (hasCompletedEvaluations) return 'Evaluation Complete'
+            if (hasBackground) return 'Awaiting Evaluation'
+            if (hasEvaluations) return `${totalEvaluations} Evaluation(s)`
+            return 'No Evaluation'
+          })
         ]),
+
         latestAssessment && h('div', {
           class: 'text-xs text-muted-foreground'
-        }, `Last: ${format(new Date(latestAssessment.assessment_date), 'MMM dd, yyyy')}`)
+        }, `Last: ${format(parseISO(latestAssessment.assessment_date), 'MMM dd, yyyy')}`),
+
+        hasBackground && h('div', {
+          class: 'text-xs text-yellow-600 dark:text-yellow-400 font-medium'
+        }, 'Evaluation created -  data pending')
       ])
     }
   }),
 
   columnHelper.display({
     id: 'actions',
-    cell: ({ row }) => h(DropdownAction, { child: row.original }),
+    cell: ({ row, table }) => h(DropdownAction, {
+      child: row.original,
+      hasPendingBackgroundEvaluation: (row.original.assessments || [])
+        .flatMap(a => a.evaluations || [])
+        .some(e => e.status === 'ready_for_evaluation'),
+      onDelete: (id: number) => {
+
+        (table.options.meta as any)?.handleDelete?.(id)
+      }
+    }),
     meta: {
       className: 'sticky right-0 bg-background'
     }
