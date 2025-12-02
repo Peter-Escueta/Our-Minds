@@ -63,6 +63,24 @@ const handleAgeRemove = (categoryId: number, age: number) => {
     })
   }
 }
+const handleCategoryRemove = (categoryId: number) => {
+  if (selectedAges.value[categoryId]) {
+    const agesToRemove = selectedAges.value[categoryId]
+    delete selectedAges.value[categoryId]
+
+    Object.keys(formResponses).forEach(key => {
+      const parts = key.split('-').map(Number)
+      if (parts.length === 2) {
+        const [questionId, responseAge] = parts
+        const question = questions.value.find(q => q.id === questionId)
+        if (question && question.skill_category_id === categoryId && agesToRemove.includes(responseAge)) {
+          delete formResponses[key]
+        }
+      }
+    })
+  }
+
+}
 const submitAssessment = async () => {
   try {
     const responses = Object.entries(formResponses).map(([compositeKey, value]) => {
@@ -120,6 +138,7 @@ const submitAssessment = async () => {
     handleAgeChange,
     handleAgeRemove,
     submitAssessment,
+    handleCategoryRemove,
     hasResponses
   }
 }
