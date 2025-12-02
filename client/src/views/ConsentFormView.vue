@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -18,10 +18,9 @@ import { genderOptions, gradeOptions, placementOptions } from '@/data/childFormO
 import { useConsentForm } from '@/composables/useConsentForm'
 import { useAuth } from '@/composables/useAuth'
 
-const { formData, submitForm, resetForm } = useConsentForm()
+const { formData, submitForm } = useConsentForm()
 const { isLoading } = useAuth()
 
-// Initialize therapy details for each therapy type
 const therapyDetails = ref<Record<TherapyType, Therapy>>({
   [TherapyType.BEHAVIORAL]: {
     type: TherapyType.BEHAVIORAL,
@@ -57,7 +56,6 @@ const therapyDetails = ref<Record<TherapyType, Therapy>>({
   },
 })
 
-// Computed for template
 const therapyList = computed(() =>
   Object.values(TherapyType).map((type) => ({
     type,
@@ -69,45 +67,22 @@ const therapyList = computed(() =>
 function toggleTherapy(therapyType: TherapyType) {
   const therapy = therapyDetails.value[therapyType]
   therapy.is_received = !therapy.is_received
-
-  // Update formData.therapies to match the data model
-  if (therapy.is_received) {
-    // Add to therapies array if not already present
-    if (!formData.therapies?.some((t) => t.type === therapyType)) {
-      formData.therapies = [...(formData.therapies || []), { ...therapy }]
-    }
-  } else {
-    // Remove from therapies array
-    formData.therapies = formData.therapies?.filter((t) => t.type !== therapyType) || []
-
-    // Reset details when unchecking
-    therapyDetails.value[therapyType] = {
-      type: therapyType,
-      is_received: false,
-      therapy_center: '',
-      therapist_name: '',
-      therapist_contact_number: '',
-      therapist_email: '',
-    }
-  }
 }
 
-function updateTherapyDetails(therapyType: TherapyType, field: keyof Therapy, value: string) {
-  const therapy = therapyDetails.value[therapyType]
-  therapy[field] = value
+watch(
+  therapyDetails,
+  (newDetails) => {
+    const activeTherapies = Object.values(newDetails).filter((t) => t.is_received)
 
-  // Also update in formData if therapy is selected
-  if (therapy.is_received) {
-    const index = formData.therapies?.findIndex((t) => t.type === therapyType) ?? -1
-    if (index > -1 && formData.therapies) {
-      formData.therapies[index] = { ...therapy }
+    if (formData.value) {
+      formData.value.therapies = activeTherapies.map((t) => ({ ...t }))
     }
-  }
-}
+  },
+  { deep: true },
+)
 
-// Initialize formData therapies if not present
-if (!formData.therapies) {
-  formData.therapies = []
+if (formData.value && !formData.value.therapies) {
+  formData.value.therapies = []
 }
 </script>
 
@@ -141,11 +116,14 @@ if (!formData.therapies) {
 
           <div class="flex items-center space-x-4">
             <div class="flex items-center space-x-2">
-              <Checkbox id="is_initial_assessment" v-model="formData.is_initial_assessment" />
+              <Checkbox
+                id="is_initial_assessment"
+                v-model:checked="formData.is_initial_assessment"
+              />
               <Label for="is_initial_assessment">Initial Assessment</Label>
             </div>
             <div class="flex items-center space-x-2">
-              <Checkbox id="is_follow_up" v-model="formData.is_follow_up" />
+              <Checkbox id="is_follow_up" v-model:checked="formData.is_follow_up" />
               <Label for="is_follow_up">Follow-Up</Label>
             </div>
           </div>
@@ -301,57 +279,25 @@ if (!formData.therapies) {
                 <Input
                   type="text"
                   placeholder="Therapy center"
-                  :value="therapy.details.therapy_center"
-                  @input="
-                    (e) =>
-                      updateTherapyDetails(
-                        therapy.type,
-                        'therapy_center',
-                        (e.target as HTMLInputElement).value,
-                      )
-                  "
+                  v-model="therapy.details.therapy_center"
                   class="w-full"
                 />
                 <Input
                   type="text"
                   placeholder="Therapist name"
-                  :value="therapy.details.therapist_name"
-                  @input="
-                    (e) =>
-                      updateTherapyDetails(
-                        therapy.type,
-                        'therapist_name',
-                        (e.target as HTMLInputElement).value,
-                      )
-                  "
+                  v-model="therapy.details.therapist_name"
                   class="w-full"
                 />
                 <Input
                   type="tel"
                   placeholder="Therapist contact number"
-                  :value="therapy.details.therapist_contact_number"
-                  @input="
-                    (e) =>
-                      updateTherapyDetails(
-                        therapy.type,
-                        'therapist_contact_number',
-                        (e.target as HTMLInputElement).value,
-                      )
-                  "
+                  v-model="therapy.details.therapist_contact_number"
                   class="w-full"
                 />
                 <Input
                   type="email"
                   placeholder="Therapist email"
-                  :value="therapy.details.therapist_email"
-                  @input="
-                    (e) =>
-                      updateTherapyDetails(
-                        therapy.type,
-                        'therapist_email',
-                        (e.target as HTMLInputElement).value,
-                      )
-                  "
+                  v-model="therapy.details.therapist_email"
                   class="w-full"
                 />
               </div>
@@ -408,15 +354,12 @@ if (!formData.therapies) {
 
         <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
           <div class="space-y-2">
-            <Label for="reason">Reason</Label>
+            <Label for="reason">Reason for referral</Label>
             <Textarea id="reason" v-model="formData.reason" />
           </div>
         </div>
 
         <div class="flex justify-end space-x-4 pt-6">
-          <Button type="button" variant="outline" @click="resetForm" :disabled="isLoading">
-            Reset Form
-          </Button>
           <Button type="submit" :disabled="isLoading">
             <span v-if="isLoading">Saving...</span>
             <span v-else>Submit Information</span>
