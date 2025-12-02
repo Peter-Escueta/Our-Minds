@@ -7,88 +7,93 @@ export function useEvaluationForm() {
   const { api, handleApiError } = useApi()
   const assessment = ref<Assessment | null>(null)
   const isLoading = ref(false)
-  const currentAssessmentId = ref<string | null>(null) // Track the current assessment ID
+  const currentAssessmentId = ref<string | null>(null)
 
-  const fetchAssessment = async (assessmentId: string) => {
+
+  const performSubmission = async (urlSuffix: string, data: any, successMessage: string) => {
     try {
       isLoading.value = true
-      currentAssessmentId.value = assessmentId // Store the assessment ID
 
-      const endpoint = import.meta.env.VITE_API_ASSESSMENT_ENDPOINT
-      console.log('🔍 Fetching assessment from:', `${endpoint}/${assessmentId}/results`)
-
-      const response = await api.get(`${endpoint}/${assessmentId}/results`)
-
-      if (!response.data?.data) {
-        throw new Error('Invalid response format - no data found')
+      const id = assessment.value?.id || currentAssessmentId.value
+      if (!id) {
+        toast.error('No assessment loaded - please refresh.')
+        return false
       }
 
-      assessment.value = response.data.data
-      console.log('📊 Assessment data loaded:', assessment.value)
-      console.log('🆔 Assessment ID:', assessment.value.id)
+      const endpoint = import.meta.env.VITE_API_ASSESSMENT_ENDPOINT
+      const fullUrl = `${endpoint}/${id}/${urlSuffix}`
 
-    } catch (error) {
-      console.error('❌ Failed to load assessment:', error)
-      handleApiError(error, 'Failed to load assessment data')
-      throw error
+
+
+
+      await api.post(fullUrl, { assessment_id: id, ...data })
+
+      toast.success(successMessage)
+      return true
+
+    } catch (error: any) {
+      console.error(`❌ Submission failed for ${urlSuffix}:`, error)
+
+
+      if (error.response?.status === 403) {
+        toast.error('Permission Denied: You are not authorized to perform this action.')
+      } else {
+
+        const msg = error.response?.data?.message || error.message || 'Unknown error'
+        toast.error(`Error: ${msg}`)
+      }
+      return false
     } finally {
       isLoading.value = false
     }
   }
 
-  const submitEvaluation = async (evaluationData: Evaluation) => {
+
+
+  const fetchAssessment = async (assessmentId: string) => {
     try {
-      console.log('🔄 Starting evaluation submission...')
-      console.log('📋 Current assessment state:', assessment.value)
-      console.log('🆔 Stored assessment ID:', currentAssessmentId.value)
-
-      // Try multiple ways to get the assessment ID
-      let assessmentIdToUse = assessment.value?.id || currentAssessmentId.value
-
-      if (!assessmentIdToUse) {
-        const errorMsg = 'No assessment loaded - please refresh the page and try again'
-        console.error(errorMsg)
-        toast.error(errorMsg)
-        return false
-      }
-
+      isLoading.value = true
+      currentAssessmentId.value = assessmentId
       const endpoint = import.meta.env.VITE_API_ASSESSMENT_ENDPOINT
-      const payload = {
-        assessment_id: assessmentIdToUse,
-        ...evaluationData
-      }
+      const response = await api.get(`${endpoint}/${assessmentId}/results`)
 
-      console.log('📤 Sending evaluation to:', `${endpoint}/${assessmentIdToUse}/evaluations`)
-      console.log('📦 Payload:', payload)
+      if (!response.data?.data) throw new Error('No data found')
 
-      const response = await api.post(`${endpoint}/${assessmentIdToUse}/evaluations`, payload)
-
-      console.log('✅ Evaluation submitted successfully:', response.data)
-      toast.success('Evaluation submitted successfully')
-      return true
-
-    } catch (error: any) {
-      console.error('❌ Evaluation submission failed:', error)
-
-      if (error.response) {
-        console.error('Server responded with:', error.response.status, error.response.data)
-        toast.error(`Server error: ${error.response.data?.message || 'Unknown error'}`)
-      } else if (error.request) {
-        console.error('No response received:', error.request)
-        toast.error('No response from server. Please check your connection.')
-      } else {
-        console.error('Request setup error:', error.message)
-        toast.error(`Failed to submit evaluation: ${error.message}`)
-      }
-
-      return false
+      assessment.value = response.data.data
+    } catch (error) {
+      handleApiError(error, 'Failed to load assessment')
+    } finally {
+      isLoading.value = false
     }
+  }
+
+
+  const submitBackground = async (data: Partial<Evaluation>) => {
+    return await performSubmission(
+      'background',
+      { background_information: data.background_information },
+      'Background information saved successfully'
+    )
+  }
+
+
+  const submitEvaluation = async (data: Partial<Evaluation>) => {
+    return await performSubmission(
+      'finalize',
+      {
+        recommendations: data.recommendations,
+        websites: data.websites,
+        status: 'completed'
+      },
+      'Evaluation completed successfully'
+    )
   }
 
   return {
     assessment,
     isLoading,
     fetchAssessment,
+    submitBackground,
     submitEvaluation
   }
 }
