@@ -50,7 +50,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/children/{child}/assessments/latest', [AssessmentController::class, 'latest']);
     Route::apiResource('assessments.evaluations', AssessmentEvaluationController::class)
         ->only(['index', 'store']);
-
+    Route::post('/assessments/{assessment}/background', [AssessmentEvaluationController::class, 'storeBackground']);
+    Route::post('/assessments/{assessment}/finalize', [AssessmentEvaluationController::class, 'storeEvaluation']);
     /*------------------
     | Questions & Categories
     -------------------*/
