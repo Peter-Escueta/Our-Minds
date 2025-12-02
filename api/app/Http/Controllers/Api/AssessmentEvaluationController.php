@@ -2,27 +2,27 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\EvaluationStatus;
 use App\Http\Controllers\Api\Controller;
 use App\Models\Assessment;
 use App\Models\AssessmentEvaluation;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class AssessmentEvaluationController extends Controller
 {
     /**
      * Store a newly created evaluation
      */
-    public function store(Request $request, Assessment $assessment)
+    public function storeBackground(Request $request, Assessment $assessment)
     {
         try {
             $validated = $request->validate([
                 'background_information' => 'required|string',
-                'recommendations' => 'required|array|min:1',
-                'recommendations.*' => 'string',
-                'summary_notes' => 'required|string',
             ]);
+
 
             $evaluation = DB::transaction(function () use ($assessment, $validated) {
                 return $assessment->evaluations()->create($validated);
@@ -30,8 +30,46 @@ class AssessmentEvaluationController extends Controller
 
             return response()->json([
                 'data' => $evaluation,
-                'message' => 'Evaluation created successfully'
+                'message' => 'Background information saved successfully'
             ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to save background information',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+    public function storeEvaluation(Request $request, Assessment $assessment)
+    {
+        try {
+            $request->merge([
+                'status' => EvaluationStatus::COMPLETED->value
+            ]);
+            $validated = $request->validate([
+                'background_information' => 'nullable|string',
+                'recommendations' => 'required|array|min:1',
+                'recommendations.*' => 'string',
+                'websites' => 'required|array|min:1',
+                'websites.*' => 'string',
+                'status' => [Rule::enum(EvaluationStatus::class)],
+            ]);
+
+            $evaluation = DB::transaction(function () use ($assessment, $validated) {
+                $existing = $assessment->evaluations()->latest()->first();
+
+                if ($existing) {
+
+                    $existing->update($validated);
+                    return $existing;
+                }
+
+                return $assessment->evaluations()->create($validated);
+            });
+
+            return response()->json([
+                'data' => $evaluation,
+                'message' => 'Evaluation saved successfully'
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create evaluation',
@@ -39,7 +77,6 @@ class AssessmentEvaluationController extends Controller
             ], 500);
         }
     }
-
     /**
      * Display evaluations for an assessment
      */
@@ -136,7 +173,7 @@ class AssessmentEvaluationController extends Controller
                     'created_at' => $evaluation->created_at,
                     'background_information' => $evaluation->background_information,
                     'recommendations' => $evaluation->recommendations,
-                    'summary_notes' => $evaluation->summary_notes,
+                    'websites' => $evaluation->websites,
                     'assessment' => [
                         'child_name' => $evaluation->assessment->child->first_name,
                         'assessment_date' => $evaluation->assessment->assessment_date,
