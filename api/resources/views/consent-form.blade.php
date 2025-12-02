@@ -112,10 +112,10 @@
 
         <!-- Therapy Section -->
         <tr>
-            <td><strong>Occupational Therapy</strong><br>{{ $child->occupational_therapy ? 'Yes' : 'No' }}</td>
-            <td><strong>Physical Therapy</strong><br>{{ $child->physical_therapy ? 'Yes' : 'No' }}</td>
-            <td><strong>Behavioral Therapy</strong><br>{{ $child->behavioral_therapy ? 'Yes' : 'No' }}</td>
-            <td><strong>Speech Therapy</strong><br>{{ $child->speech_therapy ? 'Yes' : 'No' }}</td>
+            <td><strong>Occupational Therapy</strong><br>{{ $child->therapies->firstWhere('type', 'occupational_therapy') ? 'Yes' : 'No' }}</td>
+            <td><strong>Physical Therapy</strong><br>{{ $child->therapies->firstWhere('type', 'physical_therapy') ? 'Yes' : 'No' }}</td>
+            <td><strong>Behavioral Therapy</strong><br>{{ $child->therapies->firstWhere('type', 'behavioral_therapy') ? 'Yes' : 'No' }}</td>
+            <td><strong>Speech Therapy</strong><br>{{ $child->therapies->firstWhere('type', 'speech_therapy') ? 'Yes' : 'No' }}</td>
         </tr>
 
         <!-- School Details -->
