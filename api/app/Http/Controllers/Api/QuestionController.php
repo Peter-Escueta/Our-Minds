@@ -18,7 +18,7 @@ class QuestionController extends Controller
             $request->validate([
                 'category_id' => 'sometimes|exists:skill_categories,id',
                 'age' => 'sometimes|integer|min:1|max:12',
-                'per_page' => 'sometimes|integer|min:1|max:100' // Added pagination support
+                'per_page' => 'sometimes|integer|min:1|max:100'
             ]);
 
             $query = Question::with('category')
@@ -33,11 +33,9 @@ class QuestionController extends Controller
                 $query->where('age', $request->age);
             }
 
-            // Return paginated results if requested, otherwise all results
             return $request->has('per_page')
                 ? $query->paginate($request->per_page)
                 : $query->get();
-
         } catch (\Exception $e) {
             Log::error('QuestionController@index error: ' . $e->getMessage());
             return response()->json([
@@ -65,7 +63,6 @@ class QuestionController extends Controller
                 'message' => 'Question created successfully',
                 'data' => $question->load('category')
             ], 201);
-
         } catch (\Exception $e) {
             Log::error('QuestionController@store error: ' . $e->getMessage());
             return response()->json([
@@ -92,7 +89,6 @@ class QuestionController extends Controller
                 'message' => 'Question updated successfully',
                 'data' => $question->load('category')
             ]);
-
         } catch (\Exception $e) {
             Log::error('QuestionController@update error: ' . $e->getMessage());
             return response()->json([
@@ -113,7 +109,6 @@ class QuestionController extends Controller
             return response()->json([
                 'message' => 'Question deleted successfully'
             ]);
-
         } catch (\Exception $e) {
             Log::error('QuestionController@destroy error: ' . $e->getMessage());
             return response()->json([
@@ -134,7 +129,6 @@ class QuestionController extends Controller
                 ->get();
 
             return response()->json($questions);
-
         } catch (\Exception $e) {
             Log::error('QuestionController@byCategoryAndAge error: ' . $e->getMessage());
             return response()->json([
