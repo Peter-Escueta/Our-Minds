@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Models\Child;
@@ -11,7 +12,6 @@ class ChildConsentController extends Controller
     public function generateConsent(Child $child)
     {
         try {
-            // Prepare your data
             $data = [
                 'child' => $child,
                 'date' => now()->format('F j, Y'),
@@ -20,23 +20,20 @@ class ChildConsentController extends Controller
                 'centerContact' => '(09912583429)',
                 'specialist' => 'Raymond E. Mindanao MA LPT RPm',
                 'specialistTitle' => 'Special Education Specialist/Consultant',
-                // Add base64 encoded image if needed
                 'logo' => $this->getBase64Image(public_path('images/logo.png'))
             ];
 
-            // Configure PDF options BEFORE generating
             $pdf = Pdf::loadView('consent-form', $data)
                 ->setPaper('A4', 'portrait')
                 ->setOptions([
                     'isRemoteEnabled' => true,
                     'isHtml5ParserEnabled' => true,
                     'isPhpEnabled' => true,
-                    'defaultFont' => 'Calibri', 
-                    'chroot' => public_path() 
+                    'defaultFont' => 'Calibri',
+                    'chroot' => public_path()
                 ]);
 
             return $pdf->stream("consent-form-{$child->surname}.pdf");
-
         } catch (\Exception $e) {
             Log::error("PDF Generation Error: " . $e->getMessage());
             return response()->json([

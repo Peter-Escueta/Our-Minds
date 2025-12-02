@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Controller;
 use App\Models\Child;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -19,6 +20,7 @@ class ChildController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+
             'surname' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
@@ -32,28 +34,53 @@ class ChildController extends Controller
             'age_at_consult' => 'required|string|max:50',
             'gender' => 'required|in:male,female,other',
             'siblings' => 'nullable|string',
+
+
             'mother_name' => 'required|string|max:255',
             'mother_occupation' => 'nullable|string|max:255',
             'mother_contact' => 'required|string|max:255',
             'father_name' => 'required|string|max:255',
             'father_occupation' => 'nullable|string|max:255',
             'father_contact' => 'required|string|max:255',
+
+
             'medical_diagnosis' => 'nullable|string',
             'referring_doctor' => 'nullable|string|max:255',
             'last_assessment_date' => 'nullable|date',
             'follow_up_date' => 'nullable|date',
-            'occupational_therapy' => 'boolean',
-            'physical_therapy' => 'boolean',
-            'behavioral_therapy' => 'boolean',
-            'speech_therapy' => 'boolean',
+
+
             'school' => 'nullable|string|max:255',
             'grade' => 'nullable|string|max:50',
             'placement' => 'nullable|string|max:255',
-            'year' => 'nullable|int',
+            'year' => 'nullable|integer',
             'reason' => 'nullable|string',
-        ]);
 
-        $child = Child::create($validated);
+
+            'therapies' => 'present|array',
+            'therapies.*.type' => 'required|string',
+            'therapies.*.is_received' => 'boolean',
+            'therapies.*.therapy_center' => 'nullable|string|max:255',
+            'therapies.*.therapist_name' => 'nullable|string|max:255',
+            'therapies.*.therapist_contact_number' => 'nullable|string|max:50',
+            'therapies.*.therapist_email' => 'nullable|email|max:255',
+        ]);
+        $child = DB::transaction(function () use ($validated) {
+
+
+            $therapiesData = $validated['therapies'] ?? [];
+            unset($validated['therapies']);
+
+
+            $child = Child::create($validated);
+
+
+            if (!empty($therapiesData)) {
+                $child->therapies()->createMany($therapiesData);
+            }
+
+            return $child;
+        });
 
         return response()->json($child, 201);
     }
@@ -107,8 +134,15 @@ class ChildController extends Controller
 
     public function destroy(Child $child)
     {
-        $child->delete();
-        return response()->json(null, 204);
+        try {
+            DB::transaction(function () use ($child) {
+                $child->delete();
+            });
+
+            return response()->json($child, 200);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'Child deletion failed'], 500);
+        }
     }
 
     public function search(Request $request)
