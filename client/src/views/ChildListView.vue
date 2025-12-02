@@ -25,7 +25,11 @@ const handleAddChild = () => {
   if (!isConsultant.value) return
   router.push('/children/create')
 }
-
+const handleChildDeleted = (deletedChildId: number) => {
+  console.log('reached')
+  data.value = data.value.filter((child) => child.id !== deletedChildId)
+  childrenData.value = childrenData.value.filter((child) => child.id !== deletedChildId)
+}
 onMounted(() => {
   fetchChildren()
 })
@@ -42,6 +46,7 @@ onMounted(() => {
       :data="childrenData"
       :isLoading="isLoading"
       @refresh="fetchChildren"
+      @delete="handleChildDeleted"
       class="flex-1"
     />
   </div>
