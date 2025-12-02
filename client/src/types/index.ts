@@ -42,6 +42,7 @@ export interface Evaluation {
   created_at?: string
   background_information: string
   recommendations: string[]
+  websites: string[]
   summary_notes: string
   assessment?: Assessment
     assessed_ages?: number[]
